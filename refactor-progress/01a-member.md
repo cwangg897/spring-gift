@@ -21,8 +21,8 @@
 
 ### Phase A — 구조 변경
 
-- [ ] A.1 `gift.member.MemberService` 신설 — `register(MemberRequest)` / `authenticate(MemberRequest)` / `findById(Long)` / `existsByEmail(String)`, 컨트롤러 위임
-- [ ] A.2 `AdminMemberController` 도 `MemberService` 재사용
+- [x] A.1 `gift.member.MemberService` 신설 — `register(MemberRequest)` / `authenticate(MemberRequest)` / `findById(Long)` / `existsByEmail(String)` + admin 메서드 (`findAll`, `createForAdmin`, `update`, `chargePoint`, `delete`). `MemberController` 위임. ✓
+- [x] A.2 `AdminMemberController` 도 `MemberService` 재사용. `MemberRepository` 직접 호출 0건. ✓
 
 ### Phase B — 작동 변경
 
@@ -44,4 +44,4 @@
 
 ## 4. 변경 로그
 
-- _(작업 진행 시 기록)_
+- 2026-05-16: Phase A 완료 — `MemberService` 추출, 컨트롤러 위임. `MemberServiceTest` 4건 (register/duplicate/authenticate/wrong password) + 기존 3건 = `./gradlew test` 7/0/0 그린. 부수: `AbstractIntegrationTest` 를 `static { MYSQL.start(); }` + `@DynamicPropertySource` 패턴으로 교체 (`@Container` annotation 이 클래스 간 lifecycle 충돌로 두 번째 Testcontainer 사용 클래스에서 ConnectException 발생하던 회귀 수정).
