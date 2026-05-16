@@ -21,8 +21,8 @@
 
 ### Phase A — 구조 변경
 
-- [ ] A.1 `gift.auth.KakaoAuthService` 신설 — `loginWithKakaoCode(code): TokenResponse`. 컨트롤러 위임.
-- [ ] A.2 Member upsert 를 `MemberService.findOrCreateByKakao(email)` 로 위임
+- [x] A.1 `gift.auth.KakaoAuthService` 신설 — `loginWithKakaoCode(code): TokenResponse` + `buildLoginUrl(): String`. 컨트롤러 단일 의존. ✓
+- [x] A.2 Member upsert 를 `MemberService.findOrCreateByKakao(email, accessToken)` 로 위임. `KakaoAuthController` 의 `MemberRepository`/`JwtProvider`/`KakaoLoginClient` 직접 호출 0건. ✓
 
 ### Phase B — 작동 변경
 
@@ -43,4 +43,4 @@
 
 ## 4. 변경 로그
 
-- _(작업 진행 시 기록)_
+- 2026-05-16: Phase A 완료 — `KakaoAuthService` 분리 (`loginWithKakaoCode`, `buildLoginUrl`), `MemberService.findOrCreateByKakao(email, accessToken)` 추가. `KakaoAuthController` 가 service 한 개만 의존. `KakaoAuthServiceTest` 3건 신규. `./gradlew test` 12/0/0 그린.
