@@ -1,6 +1,7 @@
 package gift.member;
 
 import gift.support.AbstractIntegrationTest;
+import gift.support.exception.AuthenticationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -44,11 +45,18 @@ class MemberServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void authenticateRejectsWrongPassword() {
+    void authenticateRejectsWrongPasswordWithAuthenticationException() {
         memberService.register(new MemberRequest("wrongpw@example.com", "pw"));
 
         assertThatThrownBy(() -> memberService.authenticate(new MemberRequest("wrongpw@example.com", "bad")))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(AuthenticationException.class)
+            .hasMessageContaining("Invalid email or password");
+    }
+
+    @Test
+    void authenticateRejectsUnknownEmailWithAuthenticationException() {
+        assertThatThrownBy(() -> memberService.authenticate(new MemberRequest("nobody@example.com", "pw")))
+            .isInstanceOf(AuthenticationException.class)
             .hasMessageContaining("Invalid email or password");
     }
 }

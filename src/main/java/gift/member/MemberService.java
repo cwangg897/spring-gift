@@ -2,11 +2,14 @@ package gift.member;
 
 import gift.auth.JwtProvider;
 import gift.auth.TokenResponse;
+import gift.support.exception.AuthenticationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class MemberService {
     private final MemberRepository memberRepository;
     private final JwtProvider jwtProvider;
@@ -16,6 +19,7 @@ public class MemberService {
         this.jwtProvider = jwtProvider;
     }
 
+    @Transactional
     public TokenResponse register(MemberRequest request) {
         if (memberRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email is already registered.");
@@ -28,10 +32,10 @@ public class MemberService {
 
     public TokenResponse authenticate(MemberRequest request) {
         final Member member = memberRepository.findByEmail(request.email())
-            .orElseThrow(() -> new IllegalArgumentException("Invalid email or password."));
+            .orElseThrow(() -> new AuthenticationException("Invalid email or password."));
 
-        if (member.getPassword() == null || !member.getPassword().equals(request.password())) {
-            throw new IllegalArgumentException("Invalid email or password.");
+        if (!member.matchesPassword(request.password())) {
+            throw new AuthenticationException("Invalid email or password.");
         }
 
         final String token = jwtProvider.createToken(member.getEmail());
@@ -51,6 +55,7 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
+    @Transactional
     public Member createForAdmin(String email, String password) {
         if (memberRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email is already registered.");
@@ -58,18 +63,21 @@ public class MemberService {
         return memberRepository.save(new Member(email, password));
     }
 
+    @Transactional
     public Member update(Long id, String email, String password) {
         final Member member = findById(id);
         member.update(email, password);
         return memberRepository.save(member);
     }
 
+    @Transactional
     public Member chargePoint(Long id, int amount) {
         final Member member = findById(id);
         member.chargePoint(amount);
         return memberRepository.save(member);
     }
 
+    @Transactional
     public void delete(Long id) {
         memberRepository.deleteById(id);
     }

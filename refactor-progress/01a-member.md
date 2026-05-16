@@ -26,9 +26,9 @@
 
 ### Phase B — 작동 변경
 
-- [ ] B.1 `MemberService` mutating 메서드 `@Transactional`, 조회 `readOnly=true`
-- [ ] B.2 `Member.matchesPassword(String raw)` 도메인 메서드 추가, 컨트롤러의 `equals` 제거
-- [ ] B.3 인증 실패 → `AuthenticationException`(401) + 글로벌 `@RestControllerAdvice` (ADR-007)
+- [x] B.1 `MemberService` 에 클래스 레벨 `@Transactional(readOnly=true)` + mutating 메서드 (`register`, `createForAdmin`, `update`, `chargePoint`, `delete`) 에 `@Transactional` 부착 ✓
+- [x] B.2 `Member.matchesPassword(String raw)` 도메인 메서드 추가, `MemberService.authenticate` 가 도메인 메서드 호출 (직접 `equals` 비교 제거) ✓
+- [x] B.3 인증 실패 → `gift.support.exception.AuthenticationException`(401) + `gift.support.GlobalExceptionHandler` (`@RestControllerAdvice`) 신설. ADR-007 부분 도입 (다른 도메인 예외는 각 도메인 Phase B 에서 정리). ✓
 
 ---
 
@@ -45,3 +45,4 @@
 ## 4. 변경 로그
 
 - 2026-05-16: Phase A 완료 — `MemberService` 추출, 컨트롤러 위임. `MemberServiceTest` 4건 (register/duplicate/authenticate/wrong password) + 기존 3건 = `./gradlew test` 7/0/0 그린. 부수: `AbstractIntegrationTest` 를 `static { MYSQL.start(); }` + `@DynamicPropertySource` 패턴으로 교체 (`@Container` annotation 이 클래스 간 lifecycle 충돌로 두 번째 Testcontainer 사용 클래스에서 ConnectException 발생하던 회귀 수정).
+- 2026-05-16: Phase B 완료 — `MemberService` `@Transactional` 부착, `Member.matchesPassword` 도메인 메서드, `AuthenticationException`(401) + `GlobalExceptionHandler` 신설. `MemberServiceTest` 5건 + `MemberControllerLoginTest` (401 응답 검증) = `./gradlew test` 9/0/0 그린.

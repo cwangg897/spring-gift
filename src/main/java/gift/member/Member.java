@@ -46,6 +46,10 @@ public class Member {
         this.kakaoAccessToken = kakaoAccessToken;
     }
 
+    public boolean matchesPassword(String raw) {
+        return this.password != null && this.password.equals(raw);
+    }
+
     public void chargePoint(int amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("Amount must be greater than zero.");
