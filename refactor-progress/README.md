@@ -17,7 +17,7 @@
 | 4 | 01b | auth Phase A | 도메인 | [x] | KakaoAuthService 분리 ✓ |
 | 5 | 01b | auth Phase B | 도메인 | [x] | DomainException 계층 + Kakao 422 + @Transactional ✓ |
 | 6 | 01.5 | tx-boundary | 횡단 | [x] | OrderFacade(@Transactional) 임시 도입 ✓ |
-| 7 | 02 | product Phase A | 도메인 | [ ] | ProductService 가드레일 |
+| 7 | 02 | product Phase A | 도메인 | [x] | ProductService + CategoryService 가드레일 ✓ |
 | 8 | 02+03B | product+category Phase B | 도메인 | [ ] | category Phase B 흡수 |
 | 9 | 03 | category Phase A | 도메인 | [ ] | CategoryService 가드레일 |
 | 10 | 04 | option Phase A | 도메인 | [ ] | OptionService 가드레일 |
@@ -106,3 +106,4 @@
 - 2026-05-16: PR #4 (01b-auth Phase A) 완료. `KakaoAuthService` 분리, `MemberService.findOrCreateByKakao` 추가. `./gradlew test` 12/0/0.
 - 2026-05-16: PR #5 (01b-auth Phase B) 완료. `DomainException` 계층 + `KakaoLoginException`(422) + `@Transactional` + `extractMemberOrThrow`. `GlobalExceptionHandler` 단일 advice. `./gradlew test` 16/0/0.
 - 2026-05-16: PR #6 (01.5-tx-boundary 횡단) 완료. 임시 `OrderFacade @Transactional` 도입으로 주문 6단계 원자화. `OrderFacadeIntegrationTest` 3건 (성공/롤백/404). `@Deprecated(forRemoval, since="01.5")` 박제. `./gradlew test` 19/0/0.
+- 2026-05-16: PR #7 (02-product Phase A) 완료. `ProductService` + `CategoryService` 추출, 3 컨트롤러 위임. `./gradlew test` 24/0/0.

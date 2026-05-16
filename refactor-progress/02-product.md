@@ -22,8 +22,8 @@
 
 ### Phase A (PR #7) — 구조 변경
 
-- [ ] A.1 `gift.product.ProductService` 신설 — `create/update/delete/findById/findAll(Pageable)`, 컨트롤러 위임
-- [ ] A.2 `gift.category.CategoryService` 신설 (Phase A 만) — `CategoryController` 위임
+- [x] A.1 `gift.product.ProductService` 신설 — REST CRUD + admin 메서드 (`findAll(Pageable)`, `findById`, `create`, `update`, `delete`, `createForAdmin`, `updateForAdmin`, `findByIdOrThrow`, `validateNameOnly`). `ProductController` / `AdminProductController` 모두 위임. ✓
+- [x] A.2 `gift.category.CategoryService` 신설 — `findAll`, `findById`, `create`, `update`, `delete`. `CategoryController` 위임. ✓
 
 ### Phase B (PR #8, product + category 합본) — 작동 변경
 
@@ -44,4 +44,4 @@
 
 ## 4. 변경 로그
 
-- _(작업 진행 시 기록)_
+- 2026-05-16: Phase A 완료 — `ProductService` + `CategoryService` 추출, 3개 컨트롤러 (`ProductController`, `AdminProductController`, `CategoryController`) 모두 위임. `ProductServiceTest` 3건 + `CategoryServiceTest` 2건. `./gradlew test` 24/0/0 그린.
