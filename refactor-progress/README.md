@@ -15,7 +15,7 @@
 | 2 | 01a | member Phase A | 도메인 | [x] | MemberService 가드레일 ✓ |
 | 3 | 01a | member Phase B | 도메인 | [x] | 도메인 불변식 + 401 예외 통합 ✓ |
 | 4 | 01b | auth Phase A | 도메인 | [x] | KakaoAuthService 분리 ✓ |
-| 5 | 01b | auth Phase B | 도메인 | [ ] | JwtTokenProvider 캡슐화 |
+| 5 | 01b | auth Phase B | 도메인 | [x] | DomainException 계층 + Kakao 422 + @Transactional ✓ |
 | 6 | 01.5 | tx-boundary | 횡단 | [ ] | OrderFacade(@Transactional) 임시 도입 |
 | 7 | 02 | product Phase A | 도메인 | [ ] | ProductService 가드레일 |
 | 8 | 02+03B | product+category Phase B | 도메인 | [ ] | category Phase B 흡수 |
@@ -104,3 +104,4 @@
 - 2026-05-16: PR #2 (01a-member Phase A) 완료. `MemberService` 추출 + 컨트롤러 위임. `./gradlew test` 7/0/0. 부수 회귀 수정: `AbstractIntegrationTest` 컨테이너 lifecycle 패턴.
 - 2026-05-16: PR #3 (01a-member Phase B) 완료. `@Transactional` 부착, `Member.matchesPassword`, `AuthenticationException`(401) + `GlobalExceptionHandler` 신설. `./gradlew test` 9/0/0.
 - 2026-05-16: PR #4 (01b-auth Phase A) 완료. `KakaoAuthService` 분리, `MemberService.findOrCreateByKakao` 추가. `./gradlew test` 12/0/0.
+- 2026-05-16: PR #5 (01b-auth Phase B) 완료. `DomainException` 계층 + `KakaoLoginException`(422) + `@Transactional` + `extractMemberOrThrow`. `GlobalExceptionHandler` 단일 advice. `./gradlew test` 16/0/0.

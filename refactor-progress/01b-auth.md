@@ -26,10 +26,10 @@
 
 ### Phase B — 작동 변경
 
-- [ ] B.1 `KakaoAuthService.loginWithKakaoCode` 에 `@Transactional` (Member 생성+토큰 갱신 원자화)
-- [ ] B.2 `KakaoLoginException extends DomainException` (422) 신설, RestClient 예외 wrap
-- [ ] B.3 `AuthenticationResolver` 정련 — null 반환 대신 `AuthenticationException`(401) throw
-- [ ] B.4 `gift.support.GlobalExceptionHandler` (`@RestControllerAdvice`) 신설 — 글로벌 예외 처리 진입점 (이후 모든 도메인 활용)
+- [x] B.1 `KakaoAuthService.loginWithKakaoCode` 에 `@Transactional` ✓
+- [x] B.2 `KakaoLoginException extends DomainException`(422) 신설, `KakaoLoginClient` 의 RestClient 예외 try/catch wrap ✓
+- [x] B.3 `AuthenticationResolver.extractMemberOrThrow(authorization)` 추가 — 실패 시 `AuthenticationException`(401) throw (기존 `extractMember` 도 유지 — 5개 호출처는 도메인 Phase B 에서 일괄 정리) ✓
+- [x] B.4 `GlobalExceptionHandler` 강화 — `DomainException` 단일 catch + `status()` 분기. `AuthenticationException` 도 `DomainException` 산하로 마이그레이션. ADR-007 본 도입. ✓
 
 ---
 
@@ -44,3 +44,4 @@
 ## 4. 변경 로그
 
 - 2026-05-16: Phase A 완료 — `KakaoAuthService` 분리 (`loginWithKakaoCode`, `buildLoginUrl`), `MemberService.findOrCreateByKakao(email, accessToken)` 추가. `KakaoAuthController` 가 service 한 개만 의존. `KakaoAuthServiceTest` 3건 신규. `./gradlew test` 12/0/0 그린.
+- 2026-05-16: Phase B 완료 — `DomainException` 추상 계층 + `Authentication/Authorization/NotFound/Duplicate` 4종 도메인 예외 신설. `KakaoLoginException`(422) + `KakaoLoginClient` 의 `RestClient` 예외 wrap. `KakaoAuthService.loginWithKakaoCode` `@Transactional`. `AuthenticationResolver.extractMemberOrThrow` 추가. `GlobalExceptionHandler` 단일 `DomainException` 분기 처리. `./gradlew test` 16/0/0.
