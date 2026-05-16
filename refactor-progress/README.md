@@ -2,7 +2,7 @@
 
 > **Source of truth**: `/prd.md`
 > **Plan version**: v3 (RALPLAN consensus — Planner ✓ Architect ✓ Critic ✓)
-> **Status**: pending approval → execution
+> **단순화 v3.1 (2026-05-16)**: TDD Red-Green-Refactor 의례, 0단계 동작 스냅샷, 3요소 체크박스 박제 제거. **단일 검증 기준 = 변경 후 `./gradlew test` 전체 그린** (prd 라인 30).
 
 ## 채택된 전략: 옵션 C (하이브리드)
 도메인 단위 직렬 진행 + 트랜잭션 경계 우선화 횡단 단계 + JPA 매핑 통일 횡단 단계.
@@ -27,7 +27,7 @@
 | 14 | 05 | wish Phase B | 도메인 | [ ] | 인라인 6패턴 이동 |
 | 15 | 06 | order Phase A+B | 도메인 | [ ] | OrderFacade 폐기 + 이벤트화 |
 
-**분모: 15 PR**. 흔들리지 않음.
+**분모: 15 PR**.
 
 ## 도메인 종속성 그래프
 
@@ -56,30 +56,22 @@
 06-order (OrderFacade → OrderService 승격 + 폐기)
 ```
 
-## 진행 체크 규약
+## 검증 기준 (단순)
 
-### PR 단위
-- 1 PR = 1 도메인 × 1 Phase (A 또는 B) 또는 1 횡단 단계
-- "한 조각"은 PR **내부 커밋 단위**로 해석 (prd 라인 32 "다음 변경 1개")
+**유일한 게이트**: `./gradlew test` 전체 그린 (prd 라인 30 "최소 기준은 변경 후 전체 테스트 통과").
 
-### 셀프 머지 게이트 (V3-C)
-PR description에 다음이 모두 없으면 머지 금지:
-1. 체크박스 3요소 캡처 (코드/위임/테스트)
-2. 본 README의 진행률 표 갱신 (`[ ]` → `[x]`)
-3. 해당 도메인 문서의 "변경 로그" 1줄 추가
-
-### 0단계 일반 규칙 (V3-3)
-> 0단계는 **직전 PR 산출물 그린 확인**이다. 자기 PR이 만든 테스트는 0단계가 될 수 없다 (자가참조 금지). 직전 PR이 없는 경우(00-test-infra)는 별도 3요소(00 문서 참조).
-
-### 체크박스 3요소 (V3-1, 통일 기준)
-모든 작업 체크박스는 다음 3요소가 모두 충족될 때만 ✓:
-- **(a) 코드**: 명시된 클래스/메서드가 지정 위치에 존재
-- **(b) 위임**: 기존 호출자가 새 위치 호출 + 폐기 시 `grep` 결과 0건
-- **(c) 테스트**: `./gradlew test --tests "gift.<domain>.*"` 그린 + PR description에 SHA + 로그 캡처
+각 PR 머지 전:
+1. 변경한 코드와 관련된 테스트가 (필요시 추가/수정되어) 통과
+2. **전체 `./gradlew test` 그린**
+3. README 진행률 표 `[ ]` → `[x]` 갱신 + 해당 도메인 문서 변경 로그 1줄 추가
 
 ## 통일 문서 구조
 
-모든 도메인 문서는 [`_template.md`](./_template.md)의 **필수 4 + 선택 5** 섹션 구조를 따른다.
+모든 도메인 문서는 [`_template.md`](./_template.md) 의 단순 4 섹션을 따른다:
+1. 현재 상태 진단 (file:line 단위 결함)
+2. 목표 산출물 + Phase A/B 체크리스트
+3. 검증 명령 (`./gradlew test`)
+4. 변경 로그
 
 ## ADR 인덱스
 
@@ -94,18 +86,18 @@ PR description에 다음이 모두 없으면 머지 금지:
 | ~~ADR-005~~ | (폐기, ADR-001에 흡수) | — |
 | ADR-006a | 카카오 알림 실패 정책 + 테스트 함정 | 박제 |
 | ADR-006b | 카카오 알림 재시도/DLQ ETA | 박제 (범위 외) |
-| ADR-007 | 동시성 제약 사항 | 박제 (범위 외) |
+| ADR-007 | 동시성 제약 사항 + 예외 계층 통합 | 박제 |
 
 ## 비범위 (out of scope)
 
 - `src/main/kotlin/` (현재 비어있음)
-- Thymeleaf admin → REST 전환 (`AdminMemberController`, `AdminProductController`)
+- Thymeleaf admin → REST 전환
 - BCrypt/Argon2 등 비밀번호 해싱 도입
-- 카카오 알림 재시도/DLQ (ADR-006b로 분리)
-- 동시성 제어(낙관락/비관락) (ADR-007로 분리)
-- Gradle Kotlin DSL의 kotlin plugin 정리
+- 카카오 알림 재시도/DLQ (ADR-006b)
+- 동시성 제어 (ADR-007)
 
 ## 변경 로그
 
 - 2026-05-16: v3 plan consensus 도달 (Planner ✓ Architect ✓ Critic ✓), 문서 시스템 초기화
-- 2026-05-16: PR #1 (00-test-infra) 완료. 테스트 인프라 도입 (Testcontainers MySQL 8 + Singleton + `@ServiceConnection`). `./gradlew test` 3 그린.
+- 2026-05-16: PR #1 (00-test-infra) 완료. Testcontainers MySQL 8 + Singleton + `@ServiceConnection`. `./gradlew test` 3 그린.
+- 2026-05-16: 단순화 v3.1 적용 — TDD Red-Green-Refactor 의례·0단계 동작 스냅샷·3요소 체크박스 박제 제거. 검증 기준은 "전체 테스트 그린" 1개.
