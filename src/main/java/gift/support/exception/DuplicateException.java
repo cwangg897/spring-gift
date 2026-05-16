@@ -2,14 +2,14 @@ package gift.support.exception;
 
 import org.springframework.http.HttpStatus;
 
-public class AuthenticationException extends DomainException {
+public class DuplicateException extends DomainException {
 
-    public AuthenticationException(String message) {
+    public DuplicateException(String message) {
         super(message);
     }
 
     @Override
     public HttpStatus status() {
-        return HttpStatus.UNAUTHORIZED;
+        return HttpStatus.CONFLICT;
     }
 }
