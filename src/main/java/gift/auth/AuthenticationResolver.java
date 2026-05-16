@@ -2,21 +2,14 @@ package gift.auth;
 
 import gift.member.Member;
 import gift.member.MemberRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import gift.support.exception.AuthenticationException;
 import org.springframework.stereotype.Component;
 
-/**
- * Resolves the authenticated member from an Authorization header.
- *
- * @author brian.kim
- * @since 1.0
- */
 @Component
 public class AuthenticationResolver {
     private final JwtProvider jwtProvider;
     private final MemberRepository memberRepository;
 
-    @Autowired
     public AuthenticationResolver(JwtProvider jwtProvider, MemberRepository memberRepository) {
         this.jwtProvider = jwtProvider;
         this.memberRepository = memberRepository;
@@ -30,5 +23,13 @@ public class AuthenticationResolver {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public Member extractMemberOrThrow(String authorization) {
+        final Member member = extractMember(authorization);
+        if (member == null) {
+            throw new AuthenticationException("Invalid or missing authentication.");
+        }
+        return member;
     }
 }

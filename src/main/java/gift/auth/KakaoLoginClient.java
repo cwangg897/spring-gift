@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 @Component
 public class KakaoLoginClient {
@@ -24,20 +25,28 @@ public class KakaoLoginClient {
         params.add("code", code);
         params.add("client_secret", properties.clientSecret());
 
-        return restClient.post()
-            .uri("https://kauth.kakao.com/oauth/token")
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .body(params)
-            .retrieve()
-            .body(KakaoTokenResponse.class);
+        try {
+            return restClient.post()
+                .uri("https://kauth.kakao.com/oauth/token")
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .body(params)
+                .retrieve()
+                .body(KakaoTokenResponse.class);
+        } catch (RestClientException e) {
+            throw new KakaoLoginException("Failed to exchange Kakao authorization code for access token.", e);
+        }
     }
 
     public KakaoUserResponse requestUserInfo(String accessToken) {
-        return restClient.get()
-            .uri("https://kapi.kakao.com/v2/user/me")
-            .header("Authorization", "Bearer " + accessToken)
-            .retrieve()
-            .body(KakaoUserResponse.class);
+        try {
+            return restClient.get()
+                .uri("https://kapi.kakao.com/v2/user/me")
+                .header("Authorization", "Bearer " + accessToken)
+                .retrieve()
+                .body(KakaoUserResponse.class);
+        } catch (RestClientException e) {
+            throw new KakaoLoginException("Failed to fetch Kakao user info.", e);
+        }
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

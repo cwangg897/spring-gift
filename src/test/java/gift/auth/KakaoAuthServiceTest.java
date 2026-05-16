@@ -6,8 +6,10 @@ import gift.support.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.web.client.RestClientException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -60,5 +62,28 @@ class KakaoAuthServiceTest extends AbstractIntegrationTest {
 
         Member updated = memberRepository.findByEmail("existing@example.com").orElseThrow();
         assertThat(updated.getKakaoAccessToken()).isEqualTo("refreshed-token");
+    }
+
+    @Test
+    void loginWithKakaoCodePropagatesKakaoLoginExceptionWhenTokenExchangeFails() {
+        when(kakaoLoginClient.requestAccessToken(anyString()))
+            .thenThrow(new KakaoLoginException("simulated token failure",
+                new RestClientException("downstream")));
+
+        assertThatThrownBy(() -> kakaoAuthService.loginWithKakaoCode("bad-code"))
+            .isInstanceOf(KakaoLoginException.class)
+            .hasMessageContaining("simulated token failure");
+    }
+
+    @Test
+    void loginWithKakaoCodeRollsBackMemberCreationWhenUserInfoFails() {
+        when(kakaoLoginClient.requestAccessToken(anyString()))
+            .thenReturn(new KakaoLoginClient.KakaoTokenResponse("token-then-fail"));
+        when(kakaoLoginClient.requestUserInfo(anyString()))
+            .thenThrow(new KakaoLoginException("simulated user info failure",
+                new RestClientException("downstream")));
+
+        assertThatThrownBy(() -> kakaoAuthService.loginWithKakaoCode("auth-code"))
+            .isInstanceOf(KakaoLoginException.class);
     }
 }
