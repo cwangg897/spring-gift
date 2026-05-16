@@ -56,6 +56,14 @@ public class MemberService {
     }
 
     @Transactional
+    public Member findOrCreateByKakao(String email, String accessToken) {
+        final Member member = memberRepository.findByEmail(email)
+            .orElseGet(() -> new Member(email));
+        member.updateKakaoAccessToken(accessToken);
+        return memberRepository.save(member);
+    }
+
+    @Transactional
     public Member createForAdmin(String email, String password) {
         if (memberRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email is already registered.");
