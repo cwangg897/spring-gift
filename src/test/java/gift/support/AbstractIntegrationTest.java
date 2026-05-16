@@ -1,19 +1,17 @@
 package gift.support;
 
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Base class for integration tests that need a real MySQL database.
  *
- * Uses a singleton MySQL Testcontainer reused across all test classes that
- * extend this base, keeping CI time bounded. Spring Boot's @ServiceConnection
- * wires the container into the application's datasource automatically, so
- * Flyway migrations run against the container on context load.
+ * Uses a singleton MySQL Testcontainer started once per JVM via a static
+ * initializer (not via @Container so its lifecycle is not tied to any single
+ * test class). Flyway runs V1/V2 against this container on context load.
  *
  * Default isolation: Spring rolls back any @Transactional test method. For
  * AFTER_COMMIT event verification (ADR-006a), subclasses must omit
@@ -21,12 +19,19 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@Testcontainers
 public abstract class AbstractIntegrationTest {
 
-    @Container
-    @ServiceConnection
-    static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.0.36")
-        .withDatabaseName("spring_gift_test")
-        .withReuse(true);
+    private static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.0.36")
+        .withDatabaseName("spring_gift_test");
+
+    static {
+        MYSQL.start();
+    }
+
+    @DynamicPropertySource
+    static void registerDataSourceProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", MYSQL::getJdbcUrl);
+        registry.add("spring.datasource.username", MYSQL::getUsername);
+        registry.add("spring.datasource.password", MYSQL::getPassword);
+    }
 }

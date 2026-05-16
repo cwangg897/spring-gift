@@ -12,9 +12,10 @@ Accepted (2026-05-16)
 ## Decision
 
 ### 1) 컨테이너 전략
-- **Singleton `MySQLContainer<?>`** (`@Container static` 필드, JUnit5 `@BeforeAll`) — 테스트 스위트 전체에서 1회만 시작.
-- **`@ServiceConnection`** (Spring Boot 3.1+) 사용 — datasource URL 자동 주입, `application-test.properties` 의 수동 오버라이드 제거.
-- 기반 추상 클래스: `gift.support.AbstractIntegrationTest` (`@SpringBootTest` + `@ActiveProfiles("test")` + `@Testcontainers`).
+- **JVM-singleton `MySQLContainer<?>`** — `private static final` 필드 + `static { MYSQL.start(); }` 정적 초기화. 컨테이너 lifecycle 을 JVM 에 묶고 어떤 테스트 클래스에도 의존하지 않음.
+- **`@DynamicPropertySource`** 로 `spring.datasource.url/username/password` 주입.
+- 기반 추상 클래스: `gift.support.AbstractIntegrationTest` (`@SpringBootTest` + `@ActiveProfiles("test")`).
+- _이전 결정 (`@Container @ServiceConnection static final ... withReuse(true)` + `@Testcontainers`)는 클래스 간 lifecycle 충돌(첫 클래스 종료 시 stop, 두 번째 클래스에서 재시작 실패 → ConnectException)로 폐기됨. Singleton 의도(§Drivers)는 그대로 유지._
 
 ### 2) 격리 정책 매트릭스
 
