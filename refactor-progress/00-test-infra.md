@@ -37,15 +37,15 @@
 
 ### 단일 phase (구조 변경 + 인프라 추가, 작동 영향 없음)
 
-- [ ] **0.1** `build.gradle.kts`에 Testcontainers 의존성 추가 — (a) `testImplementation("org.springframework.boot:spring-boot-testcontainers")`, `testImplementation("org.testcontainers:junit-jupiter")`, `testImplementation("org.testcontainers:mysql")` 라인 추가 (b) 기존 의존성 영향 없음 (c) `./gradlew compileTestJava` 또는 `compileTestKotlin` 그린
-- [ ] **0.2** `src/test/java/gift/ApplicationTest.java` 신규 — (a) `@SpringBootTest`로 부트업, `contextLoads()` 1메서드 (b) — (신규) (c) `./gradlew test --tests "gift.ApplicationTest"` 그린
-- [ ] **0.3** `src/test/java/gift/support/AbstractIntegrationTest.java` 신규 — (a) `@Testcontainers` + `@Container static MySQLContainer<?>` + `@ServiceConnection` (Spring Boot 3.1+) + `@ActiveProfiles("test")` 활용 (b) — (신규) (c) 샘플 통합 테스트 1건이 컨테이너 부트업 그린
-- [ ] **0.4** `src/test/resources/application-test.properties` 신규 — (a) `spring.flyway.enabled=true`, `spring.jpa.hibernate.ddl-auto=validate`, JJWT 테스트 시크릿 (b) — (신규) (c) Flyway V1/V2 자동 적용 검증 (`flyway_schema_history` 행 ≥ 2)
-- [ ] **0.5** Singleton container 패턴 명시 — (a) `MySQLContainer` 를 static 필드로, 정적 초기화 블록 또는 `@BeforeAll` 에서 1회만 시작 (b) — (해당 없음) (c) 같은 클래스 안 2개 통합 테스트가 컨테이너 1회만 띄움 검증
+- [x] **0.1** `build.gradle.kts`에 Testcontainers 의존성 추가 — `build.gradle.kts:40-42` 에 `spring-boot-testcontainers` + `testcontainers:junit-jupiter` + `testcontainers:mysql` 추가. `./gradlew compileTestJava` 그린 ✓
+- [x] **0.2** `src/test/java/gift/ApplicationTest.java` 신규 — `@SpringBootTest` + `@ActiveProfiles("test")` + `contextLoads()`. ApplicationTest H2 위에서 1개 그린 ✓
+- [x] **0.3** `src/test/java/gift/support/AbstractIntegrationTest.java` 신규 — `@Testcontainers` + `static final MySQLContainer<?>` + `@ServiceConnection` + `@ActiveProfiles("test")` + `.withReuse(true)`. 통합 테스트 부트업 그린 ✓
+- [x] **0.4** `src/test/resources/application-test.properties` 신규 — `spring.flyway.enabled=true`, `spring.jpa.hibernate.ddl-auto=validate`, `spring.jpa.open-in-view=false`, JJWT/Kakao 테스트 시크릿. `flyway_schema_history` 행 ≥ 2 그린 ✓
+- [x] **0.5** Singleton container 패턴 — `static final MySQLContainer<?> MYSQL` 정적 필드, JVM 1회 기동. `FlywayMigrationIntegrationTest` 2개 테스트가 동일 컨테이너 공유 ✓
 
 ### 추가 (V3-5 격리정책 박제)
 
-- [ ] **0.6** 격리 정책 docs (ADR-001에 박제) — (a) 통합 테스트는 기본 `@Transactional` rollback, AFTER_COMMIT 이벤트 검증 테스트는 **`@Transactional` 미부착 + `@Sql(scripts=".../cleanup.sql", executionPhase=AFTER_TEST_METHOD)`** (b) ADR-001 본문에 명문화 (c) — (정책 문서)
+- [x] **0.6** 격리 정책 docs (ADR-001에 박제) — `AbstractIntegrationTest` javadoc 에 정책 명시 + `99-adr/ADR-001-testcontainers-isolation.md` 본문 박제 완료 ✓
 
 ---
 
@@ -82,4 +82,5 @@
 
 ## [선택 5] 변경 로그
 
-- _(작업 진행 시 기록)_
+- 2026-05-16: 0.1~0.6 모두 완료. `./gradlew test` 그린 (3 tests / 0 failed / 0 skipped — ApplicationTest 1건 + FlywayMigrationIntegrationTest 2건). `./gradlew ktlintCheck` 그린.
+- Testcontainers Docker 의존성 확인: Docker Desktop 가동 필요. Java toolchain: Java 21 (Corretto) 권장. Gradle 8.14 가 Java 25 launcher 미지원이므로 `JAVA_HOME=/Users/.../corretto-21.0.9/Contents/Home` 명시 필요.

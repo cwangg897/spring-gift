@@ -11,7 +11,7 @@
 
 | # | ID | 단계 | 종류 | PR 상태 | 비고 |
 |---|---|---|---|---|---|
-| 1 | 00 | test-infra | 단일 | [ ] | Testcontainers + Flyway 부트업 |
+| 1 | 00 | test-infra | 단일 | [x] | Testcontainers + Flyway 부트업 ✓ |
 | 2 | 01a | member Phase A | 도메인 | [ ] | MemberService 가드레일 |
 | 3 | 01a | member Phase B | 도메인 | [ ] | 도메인 불변식 정리 |
 | 4 | 01b | auth Phase A | 도메인 | [ ] | KakaoAuthService 분리 |
@@ -108,3 +108,4 @@ PR description에 다음이 모두 없으면 머지 금지:
 ## 변경 로그
 
 - 2026-05-16: v3 plan consensus 도달 (Planner ✓ Architect ✓ Critic ✓), 문서 시스템 초기화
+- 2026-05-16: PR #1 (00-test-infra) 완료. 테스트 인프라 도입 (Testcontainers MySQL 8 + Singleton + `@ServiceConnection`). `./gradlew test` 3 그린.
