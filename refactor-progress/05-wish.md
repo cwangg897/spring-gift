@@ -27,7 +27,7 @@
 
 ### Phase A (PR #13) — 구조 변경
 
-- [ ] A.1 `gift.wish.WishService` 신설 — `list(Member, Pageable)` / `add(Member, Long productId)` / `remove(Member, Long wishId)` / **`removeByMemberAndProduct(Member, Long productId)`** (06-order Phase B 에서 호출)
+- [x] A.1 `gift.wish.WishService` 신설 — `list(Member, Pageable)` / `add(Member, Long productId)` -> `AddOutcome(wish, newlyCreated)` / `remove(Member, Long wishId)` -> `RemoveOutcome` enum (`DELETED / NOT_FOUND / FORBIDDEN`) / `removeByMemberAndProduct(Member, Long productId)` -> boolean. `WishController` 가 Repository 직접 의존 없이 위임. 인증 인라인 (3회) 은 Phase B 까지 유지.
 
 ### Phase B (PR #14) — 작동 변경
 
@@ -49,4 +49,4 @@
 
 ## 4. 변경 로그
 
-- _(작업 진행 시 기록)_
+- 2026-05-17: Phase A 완료 — `WishService` 추출 (list / add / remove / removeByMemberAndProduct), `WishController` 위임. 컨트롤러는 인증 인라인 + 응답 코드 매핑만 보유. `WishServiceTest` 6건 추가 (add new/dup/unknown, remove owner/non-owner, list).
