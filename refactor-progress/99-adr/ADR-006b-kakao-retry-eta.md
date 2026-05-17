@@ -1,7 +1,9 @@
-# ADR-006b · 카카오 알림 재시도/DLQ ETA (범위 외)
+# ADR-006b · 카카오 알림 재시도/DLQ ETA
 
 ## Status
-Accepted — **본 리팩토링 범위 외** (V3-D 박제)
+**Implemented (Outbox 옵션 채택, 2026-05-17)** — PR #16 에서 §2-(ii) Outbox 옵션 활성화. 비동기 (`@Async`) 와 외부 큐 (Kafka/SQS) 는 여전히 범위 외.
+
+(원래 박제: Accepted — 본 리팩토링 범위 외 (V3-D))
 
 ## Context
 - ADR-006a 채택 후에도 카카오 API 호출은 **요청 스레드에서 동기 실행** (`@TransactionalEventListener` 만으로는 비동기화 아님).
@@ -59,5 +61,14 @@ Accepted — **본 리팩토링 범위 외** (V3-D 박제)
 - 활성화 시 Outbox vs Retryable 선택 — 운영 트래픽 분석 후 결정.
 
 ## 적용 PR
-- (해당 없음, 후속 사이클)
-- 06-order §B.5 에 "결정만 박제, 구현 본 사이클 외" 명시
+- **PR #16 (2026-05-17): §2-(ii) Outbox 옵션 채택 완료.**
+  - Flyway V3 `outbox_event` 테이블 (status / attempts / last_error / processed_at + status 인덱스).
+  - `OutboxEvent` JPA 엔티티 + `OutboxEventRepository`.
+  - `OutboxEventProcessor` @Transactional public method — kakao 호출, 성공 시 SENT, 실패 시 attempts 증가, MAX_ATTEMPTS(5) 도달 시 DEAD. 예외 swallow.
+  - `OutboxPoller` @Scheduled(fixedDelay=5000) — 50건 배치 처리, 각 행을 별도 tx 로 위임.
+  - `Application.java` 에 `@EnableScheduling` 부착.
+  - `OrderService.placeOrder` 가 인메모리 이벤트 발행 대신 outbox 행 INSERT (같은 tx).
+  - 폐기: `KakaoNotificationListener` (인메모리 AFTER_COMMIT).
+  - 회귀 보호: `OrderServiceIntegrationTest.placeOrderWritesPendingOutboxRow` + `OutboxEventProcessorTest` 4건.
+- 06-order §B.5 의 "본 사이클 외" 박제는 PR #16 으로 활성화됨.
+- 비동기 (`@Async` + Executor) 와 외부 큐는 다음 사이클로 연기.
