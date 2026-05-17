@@ -27,10 +27,10 @@
 
 ### Phase B (PR #8, product + category 합본) — 작동 변경
 
-- [ ] B.1 `ProductService` mutating `@Transactional`, 조회 `readOnly=true`
-- [ ] B.2 **Product 이름 검증 위치 이동 (ADR-004)** — `ProductNameValidator` 형식 규칙을 `Product` 생성자/`update` 안으로, `allowKakao` 분기는 `ProductService.create/update` 인자로
-- [ ] B.3 **카테고리 삭제 시 product 참조 검사 (category Phase B 흡수)** — `CategoryService.delete()` 가 `ProductRepository.existsByCategoryId(Long)` 호출, 참조 시 `DomainException`(422)
-- [ ] B.4 자체 `@ExceptionHandler` 제거 (ADR-007 글로벌 advice 가 처리)
+- [x] B.1 `ProductService` / `CategoryService` 클래스 레벨 `@Transactional(readOnly=true)` + mutating 메서드 오버라이드
+- [x] B.2 **Product 이름 검증 위치 이동 (ADR-004)** — 형식 규칙(공백/길이/허용 패턴)을 `Product` 생성자·`update` 내부 `validateNameFormat`으로 박제, `allowKakao` 분기는 `ProductService` 시그니처에 유지. `ProductNameInvalidException`(400) 도입
+- [x] B.3 **카테고리 삭제 시 product 참조 검사 (category Phase B 흡수)** — `ProductRepository.existsByCategoryId(Long)` 추가, `CategoryService.delete()`가 `CategoryInUseException`(409) throw
+- [x] B.4 `ProductController.handleIllegalArgument` 제거 — 글로벌 `@RestControllerAdvice`가 `ProductNameInvalidException`(DomainException) 처리
 
 ---
 
@@ -45,3 +45,4 @@
 ## 4. 변경 로그
 
 - 2026-05-16: Phase A 완료 — `ProductService` + `CategoryService` 추출, 3개 컨트롤러 (`ProductController`, `AdminProductController`, `CategoryController`) 모두 위임. `ProductServiceTest` 3건 + `CategoryServiceTest` 2건. `./gradlew test` 24/0/0 그린.
+- 2026-05-17: Phase B 완료 (category Phase B 흡수) — `@Transactional` 부착, `Product` 엔티티 이름 형식 자가검증 + `ProductNameInvalidException`(400), `CategoryInUseException`(409) + `ProductRepository.existsByCategoryId`, `ProductController` 자체 `@ExceptionHandler` 제거 (글로벌 advice 통합), `AdminProductController`의 `CategoryRepository` → `CategoryService` 정리 (R1). 회귀 보호: `ProductControllerValidationTest`(POST 400), `CategoryServiceTest.deleteRejectsCategoryReferencedByProduct`.
