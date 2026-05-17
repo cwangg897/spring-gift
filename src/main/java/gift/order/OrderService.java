@@ -1,12 +1,13 @@
 package gift.order;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gift.member.Member;
 import gift.member.MemberService;
 import gift.option.Option;
 import gift.option.OptionService;
 import gift.product.Product;
 import gift.wish.WishService;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,24 +16,29 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class OrderService {
+    static final String ORDER_COMPLETED_EVENT_TYPE = "OrderCompleted";
+
     private final OrderRepository orderRepository;
     private final OptionService optionService;
     private final MemberService memberService;
     private final WishService wishService;
-    private final ApplicationEventPublisher eventPublisher;
+    private final OutboxEventRepository outboxEventRepository;
+    private final ObjectMapper objectMapper;
 
     public OrderService(
         OrderRepository orderRepository,
         OptionService optionService,
         MemberService memberService,
         WishService wishService,
-        ApplicationEventPublisher eventPublisher
+        OutboxEventRepository outboxEventRepository,
+        ObjectMapper objectMapper
     ) {
         this.orderRepository = orderRepository;
         this.optionService = optionService;
         this.memberService = memberService;
         this.wishService = wishService;
-        this.eventPublisher = eventPublisher;
+        this.outboxEventRepository = outboxEventRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
@@ -51,7 +57,23 @@ public class OrderService {
 
         wishService.removeByMemberAndProduct(member, product.getId());
 
-        eventPublisher.publishEvent(new OrderCompletedEvent(
+        enqueueKakaoNotification(saved, member, option, product, request);
+
+        return saved;
+    }
+
+    public Page<Order> findByMember(Member member, Pageable pageable) {
+        return orderRepository.findByMember_Id(member.getId(), pageable);
+    }
+
+    private void enqueueKakaoNotification(
+        Order saved,
+        Member member,
+        Option option,
+        Product product,
+        OrderRequest request
+    ) {
+        OrderCompletedEvent payload = new OrderCompletedEvent(
             saved.getId(),
             member.getId(),
             member.getKakaoAccessToken(),
@@ -61,12 +83,13 @@ public class OrderService {
             request.message(),
             product.getName(),
             product.getPrice()
-        ));
-
-        return saved;
-    }
-
-    public Page<Order> findByMember(Member member, Pageable pageable) {
-        return orderRepository.findByMember_Id(member.getId(), pageable);
+        );
+        try {
+            String json = objectMapper.writeValueAsString(payload);
+            outboxEventRepository.save(new OutboxEvent(ORDER_COMPLETED_EVENT_TYPE, json));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(
+                "Failed to serialize OrderCompletedEvent payload", e);
+        }
     }
 }
