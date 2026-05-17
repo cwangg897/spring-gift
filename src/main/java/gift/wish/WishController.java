@@ -1,6 +1,7 @@
 package gift.wish;
 
 import gift.auth.AuthenticationResolver;
+import gift.member.Member;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,10 +33,7 @@ public class WishController {
         @RequestHeader("Authorization") String authorization,
         Pageable pageable
     ) {
-        var member = authenticationResolver.extractMember(authorization);
-        if (member == null) {
-            return ResponseEntity.status(401).build();
-        }
+        Member member = authenticationResolver.extractMemberOrThrow(authorization);
         return ResponseEntity.ok(wishService.list(member, pageable).map(WishResponse::from));
     }
 
@@ -44,14 +42,8 @@ public class WishController {
         @RequestHeader("Authorization") String authorization,
         @Valid @RequestBody WishRequest request
     ) {
-        var member = authenticationResolver.extractMember(authorization);
-        if (member == null) {
-            return ResponseEntity.status(401).build();
-        }
-        var outcome = wishService.add(member, request.productId());
-        if (outcome.wish() == null) {
-            return ResponseEntity.notFound().build();
-        }
+        Member member = authenticationResolver.extractMemberOrThrow(authorization);
+        WishService.AddOutcome outcome = wishService.add(member, request.productId());
         if (!outcome.newlyCreated()) {
             return ResponseEntity.ok(WishResponse.from(outcome.wish()));
         }
@@ -64,14 +56,8 @@ public class WishController {
         @RequestHeader("Authorization") String authorization,
         @PathVariable Long id
     ) {
-        var member = authenticationResolver.extractMember(authorization);
-        if (member == null) {
-            return ResponseEntity.status(401).build();
-        }
-        return switch (wishService.remove(member, id)) {
-            case DELETED -> ResponseEntity.noContent().build();
-            case NOT_FOUND -> ResponseEntity.notFound().build();
-            case FORBIDDEN -> ResponseEntity.status(403).build();
-        };
+        Member member = authenticationResolver.extractMemberOrThrow(authorization);
+        wishService.remove(member, id);
+        return ResponseEntity.noContent().build();
     }
 }
