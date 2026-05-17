@@ -1,7 +1,9 @@
 package gift.order;
 
 import gift.auth.AuthenticationResolver;
+import gift.member.Member;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,49 +15,33 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 
-@SuppressWarnings("removal")
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
-    private final OrderRepository orderRepository;
+    private final OrderService orderService;
     private final AuthenticationResolver authenticationResolver;
-    private final OrderFacade orderFacade;
 
-    public OrderController(
-        OrderRepository orderRepository,
-        AuthenticationResolver authenticationResolver,
-        OrderFacade orderFacade
-    ) {
-        this.orderRepository = orderRepository;
+    public OrderController(OrderService orderService, AuthenticationResolver authenticationResolver) {
+        this.orderService = orderService;
         this.authenticationResolver = authenticationResolver;
-        this.orderFacade = orderFacade;
     }
 
     @GetMapping
-    public ResponseEntity<?> getOrders(
+    public ResponseEntity<Page<OrderResponse>> getOrders(
         @RequestHeader("Authorization") String authorization,
         Pageable pageable
     ) {
-        var member = authenticationResolver.extractMember(authorization);
-        if (member == null) {
-            return ResponseEntity.status(401).build();
-        }
-        var orders = orderRepository.findByMember_Id(member.getId(), pageable).map(OrderResponse::from);
-        return ResponseEntity.ok(orders);
+        Member member = authenticationResolver.extractMemberOrThrow(authorization);
+        return ResponseEntity.ok(orderService.findByMember(member, pageable).map(OrderResponse::from));
     }
 
     @PostMapping
-    public ResponseEntity<?> createOrder(
+    public ResponseEntity<OrderResponse> createOrder(
         @RequestHeader("Authorization") String authorization,
         @Valid @RequestBody OrderRequest request
     ) {
-        var member = authenticationResolver.extractMember(authorization);
-        if (member == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        var saved = orderFacade.createOrder(member, request);
-
+        Member member = authenticationResolver.extractMemberOrThrow(authorization);
+        Order saved = orderService.placeOrder(member, request);
         return ResponseEntity.created(URI.create("/api/orders/" + saved.getId()))
             .body(OrderResponse.from(saved));
     }
