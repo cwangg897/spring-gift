@@ -25,7 +25,7 @@
 | 12 | 04.5 | fk-unification | 횡단 | [x] | Wish/Order @ManyToOne(LAZY) 통일 + EntityGraph N+1 방지 ✓ |
 | 13 | 05 | wish Phase A | 도메인 | [x] | WishService 추출 + 컨트롤러 위임 (인증 인라인은 Phase B) ✓ |
 | 14 | 05 | wish Phase B | 도메인 | [x] | 인라인 5건 흡수 + @Transactional + DomainException 통합 ✓ |
-| 15 | 06 | order Phase A+B | 도메인 | [ ] | OrderFacade 폐기 + 이벤트화 |
+| 15 | 06 | order Phase A+B | 도메인 | [x] | OrderService 승격 + OrderFacade 폐기 + OrderCompletedEvent 이벤트화 ✓ |
 
 **분모: 15 PR**.
 
@@ -114,3 +114,4 @@
 - 2026-05-17: PR #12 (04.5-fk-unification 횡단) 완료. Wish/Order 의 primitive `memberId` → `Member @ManyToOne(LAZY)` 매핑 통일 (ADR-003), `@JoinColumn(name="member_id")` 로 V1 스키마와 정합. `findByMember_Id` Spring Data 중첩 표기 + `@EntityGraph` (Wish→product, Order→option/option.product) N+1 방지. 호출처 (WishController, OrderController, OrderFacade) 일괄 갱신. 별도 마이그레이션 없음. 32/0/0 회귀 통과.
 - 2026-05-17: PR #13 (05-wish Phase A) 완료. `WishService` 추출 — `list` / `add`(`AddOutcome`) / `remove`(`RemoveOutcome` enum) / `removeByMemberAndProduct`. `WishController` 가 Repository 의존 없이 위임, 응답 코드 401/404/200/201/204/403 보존. 인증 인라인 + product 404 + 소유권 검사는 Phase B 통합 대상. `WishServiceTest` 6건 추가. 38/0/0 그린.
 - 2026-05-17: PR #14 (05-wish Phase B) 완료. 인라인 5건 흡수 — `@Transactional`, `extractMemberOrThrow`(401), `NotFoundException`(404), `AuthorizationException`(403), `RemoveOutcome` enum 폐기 (예외 단일 패턴). `WishRepository.findByMember_IdAndProduct_Id` 에 `@EntityGraph(product)` 추가 (PR #12 architect lazy 권고 흡수). 회귀 보호: `WishServiceTest` 갱신 + NotFound 신규, `WishControllerValidationTest` 신규 (401). 40/0/0 그린.
+- 2026-05-17: **PR #15 (06-order Phase A+B 합본) 완료 — 15/15 시퀀스 종결**. `OrderService.placeOrder` 로 `OrderFacade.createOrder` 승격 + facade 폐기 (`grep OrderFacade` 0건). 위시 정리 동작 추가 (`wishService.removeByMemberAndProduct`). 카카오 알림 `OrderCompletedEvent` + `KakaoNotificationListener` `@TransactionalEventListener(AFTER_COMMIT)` 이벤트화 (ADR-006a 정합). `KakaoMessageClient.sendToMe(OrderCompletedEvent)` 시그니처 단일화. `OrderServiceIntegrationTest` 4건 (정상 / 롤백 / option not found / wish cleanup). 41/0/0 그린.

@@ -20,15 +20,15 @@
 
 ### Phase A (커밋 시리즈) — facade 승격 + 폐기
 
-- [ ] A.1 `gift.order.OrderService` 신설 — `OrderFacade.createOrder` 본체 이전, `@Transactional` 유지, 책임 명확화
-- [ ] A.2 의존 클린업 — `OrderService` 가 `MemberService` / `OptionService` (엔티티 메서드) / `WishService.removeByMemberAndProduct` 사용, 컨트롤러는 service 만 주입 (현재 6 빈 → 1 빈)
-- [ ] A.3 **`OrderFacade` 폐기**: 파일 삭제, `grep -rn "OrderFacade" src/` 결과 0 건 확인, 별도 폐기 커밋
+- [x] A.1 `OrderService` 신설 — `placeOrder` (구 `OrderFacade.createOrder` 본체 + 이벤트 발행 추가), `findByMember`. `@Transactional(readOnly=true)` 클래스 레벨 + `@Transactional` 오버라이드.
+- [x] A.2 `OrderController` 가 `OrderService` + `AuthenticationResolver` 만 주입 (의존 6 → 2). `OrderRepository` 직접 의존 제거. GET 도 service 위임.
+- [x] A.3 `OrderFacade.java` 삭제. `grep -rn 'OrderFacade' src/` 결과 0 건 확인 완료.
 
 ### Phase B (커밋 시리즈) — 누락 동작 + 이벤트화
 
-- [ ] B.1 **위시 정리 누락 동작 구현** (prd 4.3): `OrderService.placeOrder` 가 `wishService.removeByMemberAndProduct(member, option.getProduct().getId())` 호출
-- [ ] B.2 **카카오 알림 이벤트화 (ADR-006a)**: `OrderCompletedEvent` publish + `KakaoNotificationListener` (`@TransactionalEventListener(AFTER_COMMIT)`), 실패 시 WARN 로깅 only
-- [ ] B.3 `KakaoMessageClient` 호출자 정리 — try/catch 위치 listener 로, controller 의 `catch (Exception ignored)` 잔재 제거
+- [x] B.1 위시 정리 누락 동작 구현 — `OrderService.placeOrder` 가 주문 저장 후 `wishService.removeByMemberAndProduct(member, product.getId())` 호출 (boolean 반환은 무시).
+- [x] B.2 카카오 알림 이벤트화 — `OrderCompletedEvent` record 발행, `KakaoNotificationListener` 가 `@TransactionalEventListener(phase=AFTER_COMMIT)` 로 처리. 실패 시 `log.warn`, `@Transactional` 미부착 (ADR-006a §2-b/c).
+- [x] B.3 `KakaoMessageClient.sendToMe` 시그니처를 `(OrderCompletedEvent)` 로 단일화 — listener 가 단일 진입점. 컨트롤러의 try/catch 잔재는 facade 폐기로 자연 소멸.
 
 ### 후순위 (ADR-006b)
 
@@ -59,4 +59,4 @@ grep -rn "OrderFacade" src/   # 반드시 0 건
 
 ## 4. 변경 로그
 
-- _(작업 진행 시 기록)_
+- 2026-05-17: PR #15 완료 (Phase A+B 합본 + 시퀀스 종결). `OrderService` 승격 + `OrderFacade` 폐기 + 위시 정리 동작 추가 + `OrderCompletedEvent` / `KakaoNotificationListener` AFTER_COMMIT 이벤트화. `OrderServiceIntegrationTest` 4건 (정상 / 롤백 / option not found / wish cleanup). 15/15 시퀀스 종결.
