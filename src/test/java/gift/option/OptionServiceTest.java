@@ -1,0 +1,64 @@
+package gift.option;
+
+import gift.category.Category;
+import gift.category.CategoryRepository;
+import gift.product.Product;
+import gift.product.ProductRepository;
+import gift.support.AbstractIntegrationTest;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+class OptionServiceTest extends AbstractIntegrationTest {
+
+    @Autowired
+    private OptionService optionService;
+
+    @Autowired
+    private OptionRepository optionRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Test
+    void createPersistsOption() {
+        Product product = persistProductWithOption("opt-svc-create", "p-svc", "seed");
+
+        Option saved = optionService.create(product.getId(), new OptionRequest("svc-opt", 10));
+
+        assertThat(saved).isNotNull();
+        assertThat(saved.getId()).isNotNull();
+        assertThat(optionRepository.findById(saved.getId())).isPresent();
+    }
+
+    @Test
+    void createReturnsNullForUnknownProduct() {
+        Option saved = optionService.create(999_999L, new OptionRequest("orphan", 1));
+
+        assertThat(saved).isNull();
+    }
+
+    @Test
+    void deleteRejectsWhenOnlyOneOptionRemains() {
+        Product product = persistProductWithOption("opt-svc-last", "p-last", "last");
+        Long onlyOptionId = optionRepository.findByProductId(product.getId()).get(0).getId();
+
+        assertThatThrownBy(() -> optionService.delete(product.getId(), onlyOptionId))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("1개");
+    }
+
+    private Product persistProductWithOption(String categoryName, String productName, String seedOptionName) {
+        Category category = categoryRepository.save(
+            new Category(categoryName, "#ffffff", "https://example.com/c.jpg", null));
+        Product product = productRepository.save(
+            new Product(productName, 1000, "https://example.com/p.jpg", category));
+        optionRepository.save(new Option(product, seedOptionName, 5));
+        return product;
+    }
+}
