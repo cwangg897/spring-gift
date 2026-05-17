@@ -43,7 +43,7 @@ class ProductServiceTest extends AbstractIntegrationTest {
         Category category = categoryRepository.save(new Category("c-bad", "#000000", "https://example.com/i.jpg", null));
 
         assertThatThrownBy(() -> productService.create(new ProductRequest("카카오선물", 1000, "https://example.com/p.jpg", category.getId())))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(ProductNameInvalidException.class)
             .hasMessageContaining("카카오");
     }
 }
