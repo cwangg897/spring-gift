@@ -40,7 +40,7 @@ public class OrderController {
         if (member == null) {
             return ResponseEntity.status(401).build();
         }
-        var orders = orderRepository.findByMemberId(member.getId(), pageable).map(OrderResponse::from);
+        var orders = orderRepository.findByMember_Id(member.getId(), pageable).map(OrderResponse::from);
         return ResponseEntity.ok(orders);
     }
 

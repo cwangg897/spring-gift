@@ -44,7 +44,7 @@ public class WishController {
         if (member == null) {
             return ResponseEntity.status(401).build();
         }
-        var wishes = wishRepository.findByMemberId(member.getId(), pageable).map(WishResponse::from);
+        var wishes = wishRepository.findByMember_Id(member.getId(), pageable).map(WishResponse::from);
         return ResponseEntity.ok(wishes);
     }
 
@@ -66,12 +66,12 @@ public class WishController {
         }
 
         // check duplicate
-        var existing = wishRepository.findByMemberIdAndProductId(member.getId(), product.getId()).orElse(null);
+        var existing = wishRepository.findByMember_IdAndProduct_Id(member.getId(), product.getId()).orElse(null);
         if (existing != null) {
             return ResponseEntity.ok(WishResponse.from(existing));
         }
 
-        var saved = wishRepository.save(new Wish(member.getId(), product));
+        var saved = wishRepository.save(new Wish(member, product));
         return ResponseEntity.created(URI.create("/api/wishes/" + saved.getId()))
             .body(WishResponse.from(saved));
     }
@@ -92,7 +92,7 @@ public class WishController {
             return ResponseEntity.notFound().build();
         }
 
-        if (!wish.getMemberId().equals(member.getId())) {
+        if (!wish.getMember().getId().equals(member.getId())) {
             return ResponseEntity.status(403).build();
         }
 

@@ -54,7 +54,7 @@ public class OrderFacade {
         memberRepository.save(member);
 
         final Order saved = orderRepository.save(
-            new Order(option, member.getId(), request.quantity(), request.message()));
+            new Order(option, member, request.quantity(), request.message()));
 
         sendKakaoMessageIfPossible(member, saved, option);
         return saved;
