@@ -18,7 +18,7 @@
 
 ### Phase A — 구조 변경
 
-- [ ] A.1 `gift.category.CategoryService` 신설 — `create/update/delete/findAll/findById`, `CategoryController` 위임
+- [x] A.1 `gift.category.CategoryService` 신설 — `create/update/delete/findAll/findById`, `CategoryController` 위임 (PR #7 `2bd6a11` 에서 product Phase A 와 함께 선행 흡수)
 
 ### Phase B → 02-product Phase B 에 흡수
 
@@ -36,4 +36,6 @@
 
 ## 4. 변경 로그
 
-- _(작업 진행 시 기록)_
+- 2026-05-16: A.1 PR #7 (`2bd6a11`) 에서 ProductService 추출과 함께 선행 흡수.
+- 2026-05-17: Phase B (카테고리 삭제 시 product 참조 검사) PR #8 (`548956a`) 에서 흡수. `CategoryInUseException`(409) + `ProductRepository.existsByCategoryId`.
+- 2026-05-17: PR #9 박제 완료 — 본 도메인 작업은 PR #7/PR #8 에 모두 흡수됨.
