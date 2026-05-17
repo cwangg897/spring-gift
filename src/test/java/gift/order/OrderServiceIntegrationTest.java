@@ -15,6 +15,8 @@ import gift.wish.WishRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -40,6 +42,9 @@ class OrderServiceIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private WishRepository wishRepository;
+
+    @Autowired
+    private OutboxEventRepository outboxEventRepository;
 
     @Test
     void placeOrderPersistsOrderAndSubtractsStockAndPoints() {
@@ -81,6 +86,26 @@ class OrderServiceIntegrationTest extends AbstractIntegrationTest {
 
         assertThatThrownBy(() -> orderService.placeOrder(member, new OrderRequest(999_999L, 1, "nope")))
             .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void placeOrderWritesPendingOutboxRow() {
+        long initialOutboxCount = outboxEventRepository.count();
+        Category category = categoryRepository.save(new Category("c-outbox", "#abc123", "https://example.com/i.jpg", null));
+        Product product = productRepository.save(new Product("p-outbox", 1000, "https://example.com/p.jpg", category));
+        Option option = optionRepository.save(new Option(product, "opt-outbox", 10));
+        Member member = memberRepository.save(new Member("buyer-outbox@example.com", "pw"));
+        member.chargePoint(10_000);
+        memberRepository.save(member);
+
+        orderService.placeOrder(member, new OrderRequest(option.getId(), 1, "to outbox"));
+
+        List<OutboxEvent> all = outboxEventRepository.findAll();
+        assertThat(all).hasSize((int) initialOutboxCount + 1);
+        OutboxEvent last = all.get(all.size() - 1);
+        assertThat(last.getEventType()).isEqualTo(OrderService.ORDER_COMPLETED_EVENT_TYPE);
+        assertThat(last.getStatus()).isEqualTo(OutboxEvent.OutboxStatus.PENDING);
+        assertThat(last.getPayload()).contains("p-outbox").contains("opt-outbox");
     }
 
     @Test
