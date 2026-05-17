@@ -1,7 +1,9 @@
 package gift.order;
 
+import gift.member.Member;
 import gift.option.Option;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -18,11 +20,14 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "option_id")
     private Option option;
-    // primitive FK
-    private Long memberId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
+    private Member member;
+
     private int quantity;
     private String message;
     private LocalDateTime orderDateTime;
@@ -30,9 +35,9 @@ public class Order {
     protected Order() {
     }
 
-    public Order(Option option, Long memberId, int quantity, String message) {
+    public Order(Option option, Member member, int quantity, String message) {
         this.option = option;
-        this.memberId = memberId;
+        this.member = member;
         this.quantity = quantity;
         this.message = message;
         this.orderDateTime = LocalDateTime.now();
@@ -46,8 +51,8 @@ public class Order {
         return option;
     }
 
-    public Long getMemberId() {
-        return memberId;
+    public Member getMember() {
+        return member;
     }
 
     public int getQuantity() {
