@@ -7,11 +7,14 @@ import gift.member.MemberRepository;
 import gift.product.Product;
 import gift.product.ProductRepository;
 import gift.support.AbstractIntegrationTest;
+import gift.support.exception.AuthorizationException;
+import gift.support.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class WishServiceTest extends AbstractIntegrationTest {
 
@@ -55,38 +58,45 @@ class WishServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void addReturnsNullWishForUnknownProduct() {
+    void addThrowsNotFoundForUnknownProduct() {
         Member member = memberRepository.save(new Member("wish-none@example.com", "pw"));
 
-        WishService.AddOutcome outcome = wishService.add(member, 999_999L);
-
-        assertThat(outcome.wish()).isNull();
-        assertThat(outcome.newlyCreated()).isFalse();
+        assertThatThrownBy(() -> wishService.add(member, 999_999L))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Product");
     }
 
     @Test
-    void removeByOwnerReturnsDeleted() {
+    void removeByOwnerDeletesWish() {
         Member owner = memberRepository.save(new Member("wish-owner@example.com", "pw"));
         Product product = persistProduct("c-wish-own", "p-wish-own");
         Wish wish = wishRepository.save(new Wish(owner, product));
 
-        WishService.RemoveOutcome outcome = wishService.remove(owner, wish.getId());
+        wishService.remove(owner, wish.getId());
 
-        assertThat(outcome).isEqualTo(WishService.RemoveOutcome.DELETED);
         assertThat(wishRepository.findById(wish.getId())).isEmpty();
     }
 
     @Test
-    void removeByNonOwnerReturnsForbidden() {
+    void removeByNonOwnerThrowsForbidden() {
         Member owner = memberRepository.save(new Member("wish-other-owner@example.com", "pw"));
         Member intruder = memberRepository.save(new Member("wish-intruder@example.com", "pw"));
         Product product = persistProduct("c-wish-other", "p-wish-other");
         Wish wish = wishRepository.save(new Wish(owner, product));
 
-        WishService.RemoveOutcome outcome = wishService.remove(intruder, wish.getId());
+        assertThatThrownBy(() -> wishService.remove(intruder, wish.getId()))
+            .isInstanceOf(AuthorizationException.class);
 
-        assertThat(outcome).isEqualTo(WishService.RemoveOutcome.FORBIDDEN);
         assertThat(wishRepository.findById(wish.getId())).isPresent();
+    }
+
+    @Test
+    void removeUnknownWishThrowsNotFound() {
+        Member member = memberRepository.save(new Member("wish-missing@example.com", "pw"));
+
+        assertThatThrownBy(() -> wishService.remove(member, 999_999L))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Wish");
     }
 
     @Test
