@@ -34,6 +34,7 @@ public class Product {
     }
 
     public Product(String name, int price, String imageUrl, Category category) {
+        validateNameFormat(name);
         this.name = name;
         this.price = price;
         this.imageUrl = imageUrl;
@@ -41,10 +42,18 @@ public class Product {
     }
 
     public void update(String name, int price, String imageUrl, Category category) {
+        validateNameFormat(name);
         this.name = name;
         this.price = price;
         this.imageUrl = imageUrl;
         this.category = category;
+    }
+
+    private static void validateNameFormat(String name) {
+        List<String> errors = ProductNameValidator.validateFormat(name);
+        if (!errors.isEmpty()) {
+            throw new ProductNameInvalidException(String.join(", ", errors));
+        }
     }
 
     public Long getId() {
