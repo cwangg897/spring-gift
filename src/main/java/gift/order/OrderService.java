@@ -1,9 +1,9 @@
 package gift.order;
 
 import gift.member.Member;
-import gift.member.MemberRepository;
+import gift.member.MemberService;
 import gift.option.Option;
-import gift.option.OptionRepository;
+import gift.option.OptionService;
 import gift.product.Product;
 import gift.wish.WishService;
 import org.springframework.context.ApplicationEventPublisher;
@@ -16,38 +16,35 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class OrderService {
     private final OrderRepository orderRepository;
-    private final OptionRepository optionRepository;
-    private final MemberRepository memberRepository;
+    private final OptionService optionService;
+    private final MemberService memberService;
     private final WishService wishService;
     private final ApplicationEventPublisher eventPublisher;
 
     public OrderService(
         OrderRepository orderRepository,
-        OptionRepository optionRepository,
-        MemberRepository memberRepository,
+        OptionService optionService,
+        MemberService memberService,
         WishService wishService,
         ApplicationEventPublisher eventPublisher
     ) {
         this.orderRepository = orderRepository;
-        this.optionRepository = optionRepository;
-        this.memberRepository = memberRepository;
+        this.optionService = optionService;
+        this.memberService = memberService;
         this.wishService = wishService;
         this.eventPublisher = eventPublisher;
     }
 
     @Transactional
-    public Order placeOrder(Member member, OrderRequest request) {
-        Option option = optionRepository.findById(request.optionId())
-            .orElseThrow(() -> new OrderOptionNotFoundException(
-                "Option not found. id=" + request.optionId()));
+    public Order placeOrder(Member memberArg, OrderRequest request) {
+        Option option = optionService.findByIdOrThrow(request.optionId());
+        Member member = memberService.findById(memberArg.getId());
 
         option.subtractQuantity(request.quantity());
-        optionRepository.save(option);
 
         Product product = option.getProduct();
         int price = product.getPrice() * request.quantity();
         member.deductPoint(price);
-        memberRepository.save(member);
 
         Order saved = orderRepository.save(
             new Order(option, member, request.quantity(), request.message()));
