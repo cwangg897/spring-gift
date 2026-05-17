@@ -3,7 +3,6 @@ package gift.option;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,10 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.net.URI;
 import java.util.List;
 
-/*
- * Each product must have at least one option at all times.
- * Option names are validated against allowed characters and length constraints.
- */
 @RestController
 @RequestMapping(path = "/api/products/{productId}/options")
 public class OptionController {
@@ -59,10 +54,5 @@ public class OptionController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.noContent().build();
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
     }
 }
