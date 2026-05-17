@@ -22,7 +22,7 @@
 | 9 | 03 | category Phase A | 도메인 | [x] | PR #7(`2bd6a11`)에 선행 흡수, PR #8(`548956a`)에 Phase B 흡수 — 박제만 처리 |
 | 10 | 04 | option Phase A | 도메인 | [x] | OptionService 추출 + 컨트롤러 위임 ✓ |
 | 11 | 04 | option Phase B | 도메인 | [x] | 엔티티 자가검증 + 도메인 예외 + 글로벌 advice 통합 ✓ |
-| 12 | 04.5 | fk-unification | 횡단 | [ ] | Wish/Order JPA 매핑 통일 |
+| 12 | 04.5 | fk-unification | 횡단 | [x] | Wish/Order @ManyToOne(LAZY) 통일 + EntityGraph N+1 방지 ✓ |
 | 13 | 05 | wish Phase A | 도메인 | [ ] | WishService 가드레일 |
 | 14 | 05 | wish Phase B | 도메인 | [ ] | 인라인 6패턴 이동 |
 | 15 | 06 | order Phase A+B | 도메인 | [ ] | OrderFacade 폐기 + 이벤트화 |
@@ -111,3 +111,4 @@
 - 2026-05-17: PR #9 (03-category Phase A) 박제. 실 작업은 PR #7/PR #8 에 모두 흡수됨 (CategoryService 추출 + Phase B 참조 검사). 별도 코드 변경 없음.
 - 2026-05-17: PR #10 (04-option Phase A) 완료. `OptionService` 추출 (`findByProductId` / `create` / `delete`), `OptionController` 가 Repository 직접 의존 없이 위임. `OptionServiceTest` 3건 추가 (create 성공 / unknown product null / last option 삭제 거부).
 - 2026-05-17: PR #11 (04-option Phase B) 완료. `Option` 엔티티 자가검증 + `OptionNameInvalidException`(400), `LastOptionDeletionException`(422), 중복 → `DuplicateException`(409), `@Transactional` 부착, `delete` 가드 순서 재정렬 (잘못된 optionId → 404 우선), 글로벌 advice 통합 + `OptionNameValidator` 삭제. 회귀 보호 3건 추가 (`OptionServiceTest.createRejectsDuplicateName`, `OptionControllerValidationTest` illegal-name 400 + last-option 422).
+- 2026-05-17: PR #12 (04.5-fk-unification 횡단) 완료. Wish/Order 의 primitive `memberId` → `Member @ManyToOne(LAZY)` 매핑 통일 (ADR-003), `@JoinColumn(name="member_id")` 로 V1 스키마와 정합. `findByMember_Id` Spring Data 중첩 표기 + `@EntityGraph` (Wish→product, Order→option/option.product) N+1 방지. 호출처 (WishController, OrderController, OrderFacade) 일괄 갱신. 별도 마이그레이션 없음. 32/0/0 회귀 통과.
