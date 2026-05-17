@@ -9,17 +9,18 @@ import gift.option.OptionRepository;
 import gift.product.Product;
 import gift.product.ProductRepository;
 import gift.support.AbstractIntegrationTest;
+import gift.wish.Wish;
+import gift.wish.WishRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SuppressWarnings("removal")
-class OrderFacadeIntegrationTest extends AbstractIntegrationTest {
+class OrderServiceIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
-    private OrderFacade orderFacade;
+    private OrderService orderService;
 
     @Autowired
     private OrderRepository orderRepository;
@@ -36,8 +37,11 @@ class OrderFacadeIntegrationTest extends AbstractIntegrationTest {
     @Autowired
     private MemberRepository memberRepository;
 
+    @Autowired
+    private WishRepository wishRepository;
+
     @Test
-    void createOrderPersistsOrderAndSubtractsStockAndPoints() {
+    void placeOrderPersistsOrderAndSubtractsStockAndPoints() {
         Category category = categoryRepository.save(new Category("c-tx", "#ffffff", "https://example.com/i.jpg", null));
         Product product = productRepository.save(new Product("p-tx", 1000, "https://example.com/p.jpg", category));
         Option option = optionRepository.save(new Option(product, "opt-ok", 10));
@@ -45,7 +49,7 @@ class OrderFacadeIntegrationTest extends AbstractIntegrationTest {
         member.chargePoint(10_000);
         memberRepository.save(member);
 
-        Order saved = orderFacade.createOrder(member, new OrderRequest(option.getId(), 2, "thanks"));
+        Order saved = orderService.placeOrder(member, new OrderRequest(option.getId(), 2, "thanks"));
 
         assertThat(saved.getId()).isNotNull();
         assertThat(optionRepository.findById(option.getId()).orElseThrow().getQuantity()).isEqualTo(8);
@@ -53,7 +57,7 @@ class OrderFacadeIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void createOrderRollsBackStockAndPointsWhenPointDeductionFails() {
+    void placeOrderRollsBackStockAndPointsWhenPointDeductionFails() {
         Category category = categoryRepository.save(new Category("c-rb", "#000000", "https://example.com/i.jpg", null));
         Product product = productRepository.save(new Product("p-rb", 1_000_000, "https://example.com/p.jpg", category));
         Option option = optionRepository.save(new Option(product, "opt-rb", 5));
@@ -61,7 +65,7 @@ class OrderFacadeIntegrationTest extends AbstractIntegrationTest {
         member.chargePoint(100);
         memberRepository.save(member);
 
-        assertThatThrownBy(() -> orderFacade.createOrder(member, new OrderRequest(option.getId(), 2, "rollback")))
+        assertThatThrownBy(() -> orderService.placeOrder(member, new OrderRequest(option.getId(), 2, "rollback")))
             .isInstanceOf(IllegalArgumentException.class);
 
         assertThat(optionRepository.findById(option.getId()).orElseThrow().getQuantity()).isEqualTo(5);
@@ -71,10 +75,25 @@ class OrderFacadeIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void createOrderRaisesNotFoundExceptionWhenOptionMissing() {
+    void placeOrderRaisesNotFoundExceptionWhenOptionMissing() {
         Member member = memberRepository.save(new Member("buyer-missing@example.com", "pw"));
 
-        assertThatThrownBy(() -> orderFacade.createOrder(member, new OrderRequest(999_999L, 1, "nope")))
+        assertThatThrownBy(() -> orderService.placeOrder(member, new OrderRequest(999_999L, 1, "nope")))
             .isInstanceOf(OrderOptionNotFoundException.class);
+    }
+
+    @Test
+    void placeOrderRemovesExistingWishForOrderedProduct() {
+        Category category = categoryRepository.save(new Category("c-wishclean", "#abcabc", "https://example.com/i.jpg", null));
+        Product product = productRepository.save(new Product("p-wishclean", 1000, "https://example.com/p.jpg", category));
+        Option option = optionRepository.save(new Option(product, "opt-wishclean", 10));
+        Member member = memberRepository.save(new Member("buyer-wishclean@example.com", "pw"));
+        member.chargePoint(10_000);
+        memberRepository.save(member);
+        Wish wish = wishRepository.save(new Wish(member, product));
+
+        orderService.placeOrder(member, new OrderRequest(option.getId(), 1, "clean"));
+
+        assertThat(wishRepository.findById(wish.getId())).isEmpty();
     }
 }
