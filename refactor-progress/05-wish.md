@@ -31,11 +31,11 @@
 
 ### Phase B (PR #14) — 작동 변경
 
-- [ ] B.1 인증 인라인 3회 제거 (#1, #2, #3) → 글로벌 advice 가 처리
-- [ ] B.2 product 존재 체크(#4) → ProductService / `NotFoundException`(404)
-- [ ] B.3 중복 wish 체크(#5) → `WishService.add` 내부, 현재 동작(200 OK) 보존
-- [ ] B.4 소유권 체크(#6) → `WishService.remove` 내부, `AuthorizationException`(403)
-- [ ] B.5 `WishService` mutating `@Transactional`, 조회 `readOnly=true`
+- [x] B.1 인증 인라인 3회 제거 — `WishController` 가 `authenticationResolver.extractMemberOrThrow` 호출, 글로벌 `@RestControllerAdvice` 가 `AuthenticationException`(401) 처리.
+- [x] B.2 product 존재 체크 → `WishService.add` 내부에서 `productRepository.findById` + `NotFoundException`(404). (ProductService 위임 대신 service 내부 직접 처리 — repository 의존이 이미 있어 indirection 불필요.)
+- [x] B.3 중복 wish 체크 → `WishService.add` 내부 (Phase A 에서 이미 service 로 이동), 200 OK 동작 보존 — `AddOutcome.newlyCreated` 가 controller 분기 정보 제공.
+- [x] B.4 소유권 체크 → `WishService.remove` 내부, `AuthorizationException`(403) throw. `RemoveOutcome` enum 폐기 (예외 단일 패턴).
+- [x] B.5 `WishService` 클래스 레벨 `@Transactional(readOnly=true)`, mutating `add` / `remove` / `removeByMemberAndProduct` 에 `@Transactional` 오버라이드.
 
 ---
 
@@ -50,3 +50,4 @@
 ## 4. 변경 로그
 
 - 2026-05-17: Phase A 완료 — `WishService` 추출 (list / add / remove / removeByMemberAndProduct), `WishController` 위임. 컨트롤러는 인증 인라인 + 응답 코드 매핑만 보유. `WishServiceTest` 6건 추가 (add new/dup/unknown, remove owner/non-owner, list).
+- 2026-05-17: Phase B 완료 — 인라인 5건 흡수. `@Transactional`, `NotFoundException`(404), `AuthorizationException`(403), `extractMemberOrThrow` 단일 진입, `RemoveOutcome` enum 폐기. `WishRepository.findByMember_IdAndProduct_Id` 에 `@EntityGraph(product)` 추가 (lazy 안전성). 회귀 보호: `WishServiceTest` 7건 (NotFound product + NotFound wish 신규), `WishControllerValidationTest` 신규 (401 글로벌 advice 경유).
