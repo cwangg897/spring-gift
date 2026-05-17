@@ -26,7 +26,7 @@
 
 ### Phase A (PR #10) — 구조 변경
 
-- [ ] A.1 `gift.option.OptionService` 신설 — `findByProductId / create / delete`, 컨트롤러 위임
+- [x] A.1 `gift.option.OptionService` 신설 — `findByProductId / create / delete`, 컨트롤러 위임
 
 ### Phase B (PR #11) — 작동 변경
 
@@ -51,4 +51,4 @@ grep -rn "OptionNameValidator" src/   # B.1 완료 시 0건 또는 Option 내부
 
 ## 4. 변경 로그
 
-- _(작업 진행 시 기록)_
+- 2026-05-17: Phase A 완료 — `OptionService` 추출 (findByProductId / create / delete), `OptionController` 위임 전환 (Repository 의존 제거). `OptionServiceTest` 3건 추가 (create 성공 / unknown product null / last option 삭제 거부).

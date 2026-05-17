@@ -20,7 +20,7 @@
 | 7 | 02 | product Phase A | 도메인 | [x] | ProductService + CategoryService 가드레일 ✓ |
 | 8 | 02+03B | product+category Phase B | 도메인 | [x] | category Phase B 흡수, 검증 이동·참조 검사·글로벌 advice 통합 ✓ |
 | 9 | 03 | category Phase A | 도메인 | [x] | PR #7(`2bd6a11`)에 선행 흡수, PR #8(`548956a`)에 Phase B 흡수 — 박제만 처리 |
-| 10 | 04 | option Phase A | 도메인 | [ ] | OptionService 가드레일 |
+| 10 | 04 | option Phase A | 도메인 | [x] | OptionService 추출 + 컨트롤러 위임 ✓ |
 | 11 | 04 | option Phase B | 도메인 | [ ] | 이름검증/마지막옵션 규칙 이동 |
 | 12 | 04.5 | fk-unification | 횡단 | [ ] | Wish/Order JPA 매핑 통일 |
 | 13 | 05 | wish Phase A | 도메인 | [ ] | WishService 가드레일 |
@@ -109,3 +109,4 @@
 - 2026-05-16: PR #7 (02-product Phase A) 완료. `ProductService` + `CategoryService` 추출, 3 컨트롤러 위임. `./gradlew test` 24/0/0.
 - 2026-05-17: PR #8 (02-product Phase B + category Phase B 흡수) 완료. `@Transactional` 부착, `Product` 엔티티 이름 자가검증 + `ProductNameInvalidException`(400), `CategoryInUseException`(409) + `existsByCategoryId`, 글로벌 advice 통합, `AdminProductController` `CategoryService` 위임 정리. 회귀 보호 2건 추가 (`ProductControllerValidationTest`, `CategoryServiceTest.deleteRejectsCategoryReferencedByProduct`).
 - 2026-05-17: PR #9 (03-category Phase A) 박제. 실 작업은 PR #7/PR #8 에 모두 흡수됨 (CategoryService 추출 + Phase B 참조 검사). 별도 코드 변경 없음.
+- 2026-05-17: PR #10 (04-option Phase A) 완료. `OptionService` 추출 (`findByProductId` / `create` / `delete`), `OptionController` 가 Repository 직접 의존 없이 위임. `OptionServiceTest` 3건 추가 (create 성공 / unknown product null / last option 삭제 거부).
