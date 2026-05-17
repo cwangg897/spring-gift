@@ -3,6 +3,7 @@ package gift.option;
 import gift.product.Product;
 import gift.product.ProductRepository;
 import gift.support.exception.DuplicateException;
+import gift.support.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,11 @@ public class OptionService {
             return null;
         }
         return optionRepository.findByProductId(productId);
+    }
+
+    public Option findByIdOrThrow(Long optionId) {
+        return optionRepository.findById(optionId)
+            .orElseThrow(() -> new NotFoundException("Option not found. id=" + optionId));
     }
 
     @Transactional
