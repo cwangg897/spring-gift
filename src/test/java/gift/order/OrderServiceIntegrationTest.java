@@ -9,6 +9,7 @@ import gift.option.OptionRepository;
 import gift.product.Product;
 import gift.product.ProductRepository;
 import gift.support.AbstractIntegrationTest;
+import gift.support.exception.NotFoundException;
 import gift.wish.Wish;
 import gift.wish.WishRepository;
 import org.junit.jupiter.api.Test;
@@ -79,7 +80,7 @@ class OrderServiceIntegrationTest extends AbstractIntegrationTest {
         Member member = memberRepository.save(new Member("buyer-missing@example.com", "pw"));
 
         assertThatThrownBy(() -> orderService.placeOrder(member, new OrderRequest(999_999L, 1, "nope")))
-            .isInstanceOf(OrderOptionNotFoundException.class);
+            .isInstanceOf(NotFoundException.class);
     }
 
     @Test
