@@ -5,6 +5,7 @@ import gift.category.CategoryRepository;
 import gift.product.Product;
 import gift.product.ProductRepository;
 import gift.support.AbstractIntegrationTest;
+import gift.support.exception.DuplicateException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -44,12 +45,21 @@ class OptionServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void createRejectsDuplicateName() {
+        Product product = persistProductWithOption("opt-svc-dup", "p-dup", "dup-name");
+
+        assertThatThrownBy(() -> optionService.create(product.getId(), new OptionRequest("dup-name", 1)))
+            .isInstanceOf(DuplicateException.class)
+            .hasMessageContaining("이미 존재");
+    }
+
+    @Test
     void deleteRejectsWhenOnlyOneOptionRemains() {
         Product product = persistProductWithOption("opt-svc-last", "p-last", "last");
         Long onlyOptionId = optionRepository.findByProductId(product.getId()).get(0).getId();
 
         assertThatThrownBy(() -> optionService.delete(product.getId(), onlyOptionId))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(LastOptionDeletionException.class)
             .hasMessageContaining("1개");
     }
 
