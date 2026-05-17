@@ -21,7 +21,7 @@
 | 8 | 02+03B | product+category Phase B | 도메인 | [x] | category Phase B 흡수, 검증 이동·참조 검사·글로벌 advice 통합 ✓ |
 | 9 | 03 | category Phase A | 도메인 | [x] | PR #7(`2bd6a11`)에 선행 흡수, PR #8(`548956a`)에 Phase B 흡수 — 박제만 처리 |
 | 10 | 04 | option Phase A | 도메인 | [x] | OptionService 추출 + 컨트롤러 위임 ✓ |
-| 11 | 04 | option Phase B | 도메인 | [ ] | 이름검증/마지막옵션 규칙 이동 |
+| 11 | 04 | option Phase B | 도메인 | [x] | 엔티티 자가검증 + 도메인 예외 + 글로벌 advice 통합 ✓ |
 | 12 | 04.5 | fk-unification | 횡단 | [ ] | Wish/Order JPA 매핑 통일 |
 | 13 | 05 | wish Phase A | 도메인 | [ ] | WishService 가드레일 |
 | 14 | 05 | wish Phase B | 도메인 | [ ] | 인라인 6패턴 이동 |
@@ -110,3 +110,4 @@
 - 2026-05-17: PR #8 (02-product Phase B + category Phase B 흡수) 완료. `@Transactional` 부착, `Product` 엔티티 이름 자가검증 + `ProductNameInvalidException`(400), `CategoryInUseException`(409) + `existsByCategoryId`, 글로벌 advice 통합, `AdminProductController` `CategoryService` 위임 정리. 회귀 보호 2건 추가 (`ProductControllerValidationTest`, `CategoryServiceTest.deleteRejectsCategoryReferencedByProduct`).
 - 2026-05-17: PR #9 (03-category Phase A) 박제. 실 작업은 PR #7/PR #8 에 모두 흡수됨 (CategoryService 추출 + Phase B 참조 검사). 별도 코드 변경 없음.
 - 2026-05-17: PR #10 (04-option Phase A) 완료. `OptionService` 추출 (`findByProductId` / `create` / `delete`), `OptionController` 가 Repository 직접 의존 없이 위임. `OptionServiceTest` 3건 추가 (create 성공 / unknown product null / last option 삭제 거부).
+- 2026-05-17: PR #11 (04-option Phase B) 완료. `Option` 엔티티 자가검증 + `OptionNameInvalidException`(400), `LastOptionDeletionException`(422), 중복 → `DuplicateException`(409), `@Transactional` 부착, `delete` 가드 순서 재정렬 (잘못된 optionId → 404 우선), 글로벌 advice 통합 + `OptionNameValidator` 삭제. 회귀 보호 3건 추가 (`OptionServiceTest.createRejectsDuplicateName`, `OptionControllerValidationTest` illegal-name 400 + last-option 422).

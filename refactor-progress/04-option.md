@@ -30,9 +30,10 @@
 
 ### Phase B (PR #11) — 작동 변경
 
-- [ ] B.1 Option 이름 검증을 `Option` 생성자(`Option.java:33`)로 이동 (길이 ≤ 50, 허용 문자, 빈 문자열 금지). `OptionNameValidator` 폐기 또는 `Option` private 헬퍼화.
-- [ ] B.2 "옵션 ≥2 일 때만 삭제 가능" 규칙을 `OptionService.delete()` 로 이동 + `LastOptionDeletionException`(422)
-- [ ] B.3 `OptionService.create/delete` `@Transactional`, 중복 이름 검사 service 로 이동
+- [x] B.1 Option 이름 검증을 `Option` 생성자 `validateNameFormat` 으로 박제, `OptionNameValidator` 폐기 (엔티티 내부 private 헬퍼로 흡수), `OptionNameInvalidException`(400) 도입.
+- [x] B.2 "옵션 ≥2 일 때만 삭제 가능" 규칙을 `OptionService.delete()` 로 이동 + `LastOptionDeletionException`(422), 가드 순서 재정렬 (product 존재 → option 존재+소유 확인 → last-option 검사).
+- [x] B.3 `OptionService.create/delete` `@Transactional`, 중복 이름은 `DuplicateException`(409) 로 변환.
+- [x] B.4 `OptionController` 자체 `@ExceptionHandler` 제거 — 글로벌 `GlobalExceptionHandler` 가 처리.
 
 > **검증/문서화**: `Option.subtractQuantity` (Option.java:39-44), `Member.deductPoint` (Member.java:57-65) 는 이미 엔티티에 있음을 PR description 에 명시. 추가 코드 작업 없음.
 
@@ -52,3 +53,4 @@ grep -rn "OptionNameValidator" src/   # B.1 완료 시 0건 또는 Option 내부
 ## 4. 변경 로그
 
 - 2026-05-17: Phase A 완료 — `OptionService` 추출 (findByProductId / create / delete), `OptionController` 위임 전환 (Repository 의존 제거). `OptionServiceTest` 3건 추가 (create 성공 / unknown product null / last option 삭제 거부).
+- 2026-05-17: Phase B 완료 — `Option` 엔티티 자가검증 + `OptionNameInvalidException`(400), `LastOptionDeletionException`(422), 중복 → `DuplicateException`(409), `@Transactional` 부착, `delete` 가드 순서 재정렬 (잘못된 optionId → 404 우선), `OptionController` 자체 `@ExceptionHandler` 제거 (글로벌 advice 통합), `OptionNameValidator.java` 삭제. 회귀 보호 3건 추가 (`OptionServiceTest.createRejectsDuplicateName`, `OptionControllerValidationTest`의 illegal-name 400 + last-option 422).
