@@ -1,0 +1,391 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1779546681572,
+  "projectRoot": "/Users/choewang-gyu/IdeaProjects/spring-gift",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Kotlin",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "build.gradle.kts"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "gradle",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "src"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "build": {
+      "path": "build",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1779546681566,
+      "keyFiles": []
+    },
+    "gradle": {
+      "path": "gradle",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1779546681566,
+      "keyFiles": []
+    },
+    "refactor-progress": {
+      "path": "refactor-progress",
+      "purpose": null,
+      "fileCount": 12,
+      "lastAccessed": 1779546681567,
+      "keyFiles": [
+        "00-test-infra.md",
+        "01.5-tx-boundary.md",
+        "01a-member.md",
+        "01b-auth.md",
+        "02-product.md"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1779546681567,
+      "keyFiles": []
+    },
+    "src/test": {
+      "path": "src/test",
+      "purpose": "Test files",
+      "fileCount": 0,
+      "lastAccessed": 1779546681567,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "refactor-progress/README.md",
+      "accessCount": 42,
+      "lastAccessed": 1779024718762,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/wish/WishController.java",
+      "accessCount": 18,
+      "lastAccessed": 1779008225502,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/order/OrderController.java",
+      "accessCount": 17,
+      "lastAccessed": 1779022525024,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/member/Member.java",
+      "accessCount": 15,
+      "lastAccessed": 1779024108023,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/option/OptionController.java",
+      "accessCount": 13,
+      "lastAccessed": 1779002681010,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/option/Option.java",
+      "accessCount": 13,
+      "lastAccessed": 1779022552821,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/product/ProductController.java",
+      "accessCount": 12,
+      "lastAccessed": 1778984602402,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/product/AdminProductController.java",
+      "accessCount": 12,
+      "lastAccessed": 1778984603412,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/wish/Wish.java",
+      "accessCount": 12,
+      "lastAccessed": 1779008244563,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/wish/WishRepository.java",
+      "accessCount": 11,
+      "lastAccessed": 1779008225984,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/order/Order.java",
+      "accessCount": 11,
+      "lastAccessed": 1779022553610,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/product/ProductNameValidator.java",
+      "accessCount": 10,
+      "lastAccessed": 1778984629326,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/auth/AuthenticationResolver.java",
+      "accessCount": 10,
+      "lastAccessed": 1779008240849,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/order/KakaoMessageClient.java",
+      "accessCount": 10,
+      "lastAccessed": 1779024717254,
+      "type": "file"
+    },
+    {
+      "path": "prd.md",
+      "accessCount": 9,
+      "lastAccessed": 1778906231086,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/auth/KakaoAuthController.java",
+      "accessCount": 9,
+      "lastAccessed": 1778934016005,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/product/Product.java",
+      "accessCount": 9,
+      "lastAccessed": 1778984601534,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/category/CategoryController.java",
+      "accessCount": 8,
+      "lastAccessed": 1778983895587,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/option/OptionNameValidator.java",
+      "accessCount": 8,
+      "lastAccessed": 1779002319869,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/order/OrderRepository.java",
+      "accessCount": 8,
+      "lastAccessed": 1779004426654,
+      "type": "file"
+    },
+    {
+      "path": "src/main/resources/application.properties",
+      "accessCount": 8,
+      "lastAccessed": 1779024726025,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/member/MemberController.java",
+      "accessCount": 7,
+      "lastAccessed": 1778918492354,
+      "type": "file"
+    },
+    {
+      "path": "refactor-progress/01a-member.md",
+      "accessCount": 7,
+      "lastAccessed": 1778933464964,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/auth/KakaoLoginClient.java",
+      "accessCount": 7,
+      "lastAccessed": 1778934737026,
+      "type": "file"
+    },
+    {
+      "path": "src/main/resources/db/migration/V1__Initialize_project_tables.sql",
+      "accessCount": 7,
+      "lastAccessed": 1779024250396,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/member/AdminMemberController.java",
+      "accessCount": 6,
+      "lastAccessed": 1778918492919,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/product/ProductRepository.java",
+      "accessCount": 6,
+      "lastAccessed": 1778984494332,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/Application.java",
+      "accessCount": 6,
+      "lastAccessed": 1779024708557,
+      "type": "file"
+    },
+    {
+      "path": "refactor-progress/00-test-infra.md",
+      "accessCount": 5,
+      "lastAccessed": 1778917495129,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/auth/JwtProvider.java",
+      "accessCount": 5,
+      "lastAccessed": 1778934019497,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/member/MemberRepository.java",
+      "accessCount": 5,
+      "lastAccessed": 1778934020772,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/category/Category.java",
+      "accessCount": 5,
+      "lastAccessed": 1778983910749,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/product/ProductRequest.java",
+      "accessCount": 5,
+      "lastAccessed": 1778984507122,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/option/OptionRequest.java",
+      "accessCount": 5,
+      "lastAccessed": 1778997753875,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/wish/WishResponse.java",
+      "accessCount": 5,
+      "lastAccessed": 1779004437615,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/order/OrderResponse.java",
+      "accessCount": 5,
+      "lastAccessed": 1779004438035,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/order/OrderRequest.java",
+      "accessCount": 5,
+      "lastAccessed": 1779022240282,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 5,
+      "lastAccessed": 1779586507333,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/category/CategoryRepository.java",
+      "accessCount": 4,
+      "lastAccessed": 1778983911973,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/option/OptionRepository.java",
+      "accessCount": 4,
+      "lastAccessed": 1778997753363,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/wish/WishRequest.java",
+      "accessCount": 4,
+      "lastAccessed": 1779005634106,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/auth/KakaoLoginProperties.java",
+      "accessCount": 3,
+      "lastAccessed": 1778904305146,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/auth/TokenResponse.java",
+      "accessCount": 3,
+      "lastAccessed": 1778904306306,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/category/CategoryRequest.java",
+      "accessCount": 3,
+      "lastAccessed": 1778904309737,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/category/CategoryResponse.java",
+      "accessCount": 3,
+      "lastAccessed": 1778904310253,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/member/MemberRequest.java",
+      "accessCount": 3,
+      "lastAccessed": 1778904321699,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/option/OptionResponse.java",
+      "accessCount": 3,
+      "lastAccessed": 1778904325185,
+      "type": "file"
+    },
+    {
+      "path": "src/main/java/gift/product/ProductResponse.java",
+      "accessCount": 3,
+      "lastAccessed": 1778904332144,
+      "type": "file"
+    },
+    {
+      "path": "src/main/resources/db/migration/V2__Insert_default_data.sql",
+      "accessCount": 2,
+      "lastAccessed": 1778917261268,
+      "type": "file"
+    },
+    {
+      "path": "refactor-progress/_template.md",
+      "accessCount": 2,
+      "lastAccessed": 1778917477687,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

@@ -1,0 +1,18 @@
+PR #10 (04-option Phase A) — Ralph 진행 로그
+
+설계 결정:
+- ProductService Phase A 와 동일 패턴: 비즈니스 로직을 그대로 OptionService 로 이동, 응답 코드 동일.
+- 컨트롤러의 자체 @ExceptionHandler 는 Phase A 에서 유지 (글로벌 advice 통합은 Phase B 에서).
+- validateName 인라인 헬퍼는 OptionService 내부 private 으로 이동.
+- delete 시그니처: boolean 반환 (true=삭제, false=404). 옵션 ≥2 가드는 throw IllegalArgumentException 그대로.
+- findByProductId 시그니처: null 반환 (product 미존재 시) — ProductService.findById(null orElse) 패턴과 정합.
+
+회귀 보호:
+- OptionServiceTest: create 성공 + create unknown product null + delete last option throw.
+
+환경:
+- Java 21 launcher 필수
+- Docker Desktop 가동 필요
+
+진행:
+- (iteration 1 시작)

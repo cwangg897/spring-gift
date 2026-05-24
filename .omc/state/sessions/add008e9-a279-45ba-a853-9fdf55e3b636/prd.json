@@ -1,0 +1,66 @@
+{
+  "version": "0.1",
+  "task": "PR #16: Outbox 패턴 도입 — 카카오 알림의 외부 API 실패로부터 주문 트랜잭션을 분리. AFTER_COMMIT 인메모리 listener 대신 `outbox_event` 테이블에 PENDING 행 INSERT (주문 트랜잭션과 같은 tx). 별도 @Scheduled poller 가 PENDING 행 처리 → SENT / 재시도 / DEAD. ADR-006b §2-(ii) Outbox 옵션 활성화.",
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Flyway V3 outbox_event 테이블 + OutboxEvent JPA 엔티티",
+      "priority": 1,
+      "passes": true,
+      "acceptanceCriteria": [
+        "src/main/resources/db/migration/V3__Add_outbox_event_table.sql 가 존재 — id / event_type / payload TEXT / status / attempts / last_error / created_at / processed_at + status 인덱스 (CREATE INDEX 분리로 H2/MySQL 양쪽 호환)",
+        "src/main/java/gift/order/OutboxEvent.java 가 @Entity @Table(name=\"outbox_event\"), OutboxStatus enum (PENDING / SENT / DEAD) 중첩",
+        "markSent / markFailure / markDead 도메인 메서드 박제 — attempts 증가, processedAt 갱신, lastError 저장",
+        "src/main/java/gift/order/OutboxEventRepository.java 가 JpaRepository<OutboxEvent, Long> 상속, findTop50ByStatusOrderByCreatedAtAsc(OutboxStatus) 메서드 제공"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "OutboxEventProcessor + OutboxPoller (스케줄러)",
+      "priority": 2,
+      "passes": true,
+      "acceptanceCriteria": [
+        "OutboxEventProcessor @Component, @Transactional public processOne(Long eventId) — PENDING 행만 처리, payload JSON 역직렬화 후 KakaoMessageClient.sendToMe 호출, 성공 시 markSent, 실패 시 markFailure + attempts >= MAX(5) 면 markDead. 예외 swallow 후 정상 리턴 (트랜잭션은 dirty checking 으로 markSent/Failure UPDATE 커밋)",
+        "OutboxPoller @Component, @Scheduled(fixedDelay=5000) public poll() — repo.findTop50ByStatusOrderByCreatedAtAsc(PENDING) 배치 처리, 각 행을 processor.processOne 위임 (별도 tx)",
+        "Application.java 에 @EnableScheduling 부착",
+        "OrderCompletedEvent 가 Jackson 직렬화 가능 (record 기본 제공)"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "OrderService.placeOrder 가 outbox 테이블에 INSERT (인메모리 이벤트 제거)",
+      "priority": 3,
+      "passes": true,
+      "acceptanceCriteria": [
+        "OrderService.placeOrder 가 ApplicationEventPublisher.publishEvent 호출 대신 outboxEventRepository.save(new OutboxEvent(\"OrderCompleted\", payloadJson, PENDING, ...)) 호출 — 같은 @Transactional 안",
+        "ApplicationEventPublisher 의존 제거, OutboxEventRepository + ObjectMapper 의존 추가",
+        "KakaoNotificationListener.java 파일 삭제 (outbox poller 가 대체)",
+        "OrderService 의 외부 API 호출 0건 (kakao 전용 listener 가 outbox 처리에 의해 대체됨)"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "회귀 보호 + 신규 outbox 테스트",
+      "priority": 4,
+      "passes": true,
+      "acceptanceCriteria": [
+        "OrderServiceIntegrationTest 에 placeOrderWritesPendingOutboxRow 테스트 추가 — placeOrder 호출 후 outboxEventRepository.findAll() 에 1건 PENDING 존재, payload JSON 에 productName 등이 포함됨을 검증",
+        "OutboxEventProcessorTest 신규: kakaoAccessToken=null payload 처리 → SENT (kakao 호출 0건 검증을 위해 @MockBean KakaoMessageClient 활용)",
+        "OutboxEventProcessorTest: kakao 가 RuntimeException throw → attempts=1, status 여전히 PENDING (재시도 가능)",
+        "OutboxEventProcessorTest: attempts=4 에서 실패 시 attempts=5 + status=DEAD",
+        "./gradlew test 전체 그린"
+      ]
+    },
+    {
+      "id": "US-005",
+      "title": "ADR-006b 박제 갱신 — Outbox 옵션 활성화",
+      "priority": 5,
+      "passes": true,
+      "acceptanceCriteria": [
+        "refactor-progress/99-adr/ADR-006b-kakao-retry-eta.md 의 Status 를 'Implemented (Outbox 옵션 선택, 2026-05-17)' 로 갱신",
+        "ADR-006b 변경 로그 또는 Follow-ups 에 'PR #16 에서 Outbox 옵션 (ii) 채택, MAX_ATTEMPTS=5, polling interval 5초' 박제",
+        "refactor-progress/README.md 변경 로그에 PR #16 항목 1줄 (시퀀스 외 후속 작업이지만 박제 유지)"
+      ]
+    }
+  ]
+}
