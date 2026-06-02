@@ -3,6 +3,7 @@ package gift.product;
 import gift.category.Category;
 import gift.category.CategoryRepository;
 import gift.support.AbstractIntegrationTest;
+import gift.support.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,10 +33,11 @@ class ProductServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void createReturnsNullForUnknownCategory() {
-        Product saved = productService.create(new ProductRequest("orphan-prod", 1000, "https://example.com/p.jpg", 999_999L));
-
-        assertThat(saved).isNull();
+    void createThrowsNotFoundForUnknownCategory() {
+        assertThatThrownBy(() -> productService.create(
+            new ProductRequest("orphan-prod", 1000, "https://example.com/p.jpg", 999_999L)))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Category");
     }
 
     @Test
