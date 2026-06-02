@@ -15,21 +15,16 @@ public class AuthenticationResolver {
         this.memberRepository = memberRepository;
     }
 
-    public Member extractMember(String authorization) {
+    public Member extractMemberOrThrow(String authorization) {
         try {
             final String token = authorization.replace("Bearer ", "");
             final String email = jwtProvider.getEmail(token);
-            return memberRepository.findByEmail(email).orElse(null);
+            return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new AuthenticationException("Invalid or missing authentication."));
+        } catch (AuthenticationException e) {
+            throw e;
         } catch (Exception e) {
-            return null;
-        }
-    }
-
-    public Member extractMemberOrThrow(String authorization) {
-        final Member member = extractMember(authorization);
-        if (member == null) {
             throw new AuthenticationException("Invalid or missing authentication.");
         }
-        return member;
     }
 }
