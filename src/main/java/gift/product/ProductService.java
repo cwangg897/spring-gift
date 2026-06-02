@@ -2,13 +2,13 @@ package gift.product;
 
 import gift.category.Category;
 import gift.category.CategoryRepository;
+import gift.support.exception.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @Service
 @Transactional(readOnly = true)
@@ -36,24 +36,15 @@ public class ProductService {
     @Transactional
     public Product create(ProductRequest request) {
         validateName(request.name(), false);
-        Category category = categoryRepository.findById(request.categoryId()).orElse(null);
-        if (category == null) {
-            return null;
-        }
+        Category category = findCategoryOrThrow(request.categoryId());
         return productRepository.save(request.toEntity(category));
     }
 
     @Transactional
     public Product update(Long id, ProductRequest request) {
         validateName(request.name(), false);
-        Category category = categoryRepository.findById(request.categoryId()).orElse(null);
-        if (category == null) {
-            return null;
-        }
-        Product product = productRepository.findById(id).orElse(null);
-        if (product == null) {
-            return null;
-        }
+        Product product = findByIdOrThrow(id);
+        Category category = findCategoryOrThrow(request.categoryId());
         product.update(request.name(), request.price(), request.imageUrl(), category);
         return productRepository.save(product);
     }
@@ -66,29 +57,31 @@ public class ProductService {
     @Transactional
     public Product createForAdmin(String name, int price, String imageUrl, Long categoryId) {
         validateName(name, true);
-        Category category = categoryRepository.findById(categoryId)
-            .orElseThrow(() -> new NoSuchElementException("카테고리가 존재하지 않습니다. id=" + categoryId));
+        Category category = findCategoryOrThrow(categoryId);
         return productRepository.save(new Product(name, price, imageUrl, category));
     }
 
     @Transactional
     public Product updateForAdmin(Long id, String name, int price, String imageUrl, Long categoryId) {
-        Product product = productRepository.findById(id)
-            .orElseThrow(() -> new NoSuchElementException("상품이 존재하지 않습니다. id=" + id));
+        Product product = findByIdOrThrow(id);
         validateName(name, true);
-        Category category = categoryRepository.findById(categoryId)
-            .orElseThrow(() -> new NoSuchElementException("카테고리가 존재하지 않습니다. id=" + categoryId));
+        Category category = findCategoryOrThrow(categoryId);
         product.update(name, price, imageUrl, category);
         return productRepository.save(product);
     }
 
     public Product findByIdOrThrow(Long id) {
         return productRepository.findById(id)
-            .orElseThrow(() -> new NoSuchElementException("상품이 존재하지 않습니다. id=" + id));
+            .orElseThrow(() -> new NotFoundException("Product not found. id=" + id));
     }
 
     public List<String> validateNameOnly(String name, boolean allowKakao) {
         return ProductNameValidator.validate(name, allowKakao);
+    }
+
+    private Category findCategoryOrThrow(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+            .orElseThrow(() -> new NotFoundException("Category not found. id=" + categoryId));
     }
 
     private void validateName(String name, boolean allowKakao) {
