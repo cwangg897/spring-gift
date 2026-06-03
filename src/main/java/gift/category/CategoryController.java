@@ -44,9 +44,6 @@ public class CategoryController {
         @Valid @RequestBody CategoryRequest request
     ) {
         Category updated = categoryService.update(id, request);
-        if (updated == null) {
-            return ResponseEntity.notFound().build();
-        }
         return ResponseEntity.ok(CategoryResponse.from(updated));
     }
 

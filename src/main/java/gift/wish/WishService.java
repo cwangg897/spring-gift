@@ -48,13 +48,12 @@ public class WishService {
     }
 
     @Transactional
-    public boolean removeByMemberAndProduct(Member member, Long productId) {
+    public void removeByMemberAndProduct(Member member, Long productId) {
         Wish wish = wishRepository.findByMember_IdAndProduct_Id(member.getId(), productId).orElse(null);
         if (wish == null) {
-            return false;
+            return;
         }
         wishRepository.delete(wish);
-        return true;
     }
 
     public record AddOutcome(Wish wish, boolean newlyCreated) {

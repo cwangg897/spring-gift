@@ -1,10 +1,10 @@
 package gift.category;
 
 import gift.product.ProductRepository;
+import gift.support.exception.NotFoundException;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
@@ -21,10 +21,6 @@ public class CategoryService {
         return categoryRepository.findAll();
     }
 
-    public Category findById(Long id) {
-        return categoryRepository.findById(id).orElse(null);
-    }
-
     @Transactional
     public Category create(CategoryRequest request) {
         return categoryRepository.save(request.toEntity());
@@ -32,12 +28,10 @@ public class CategoryService {
 
     @Transactional
     public Category update(Long id, CategoryRequest request) {
-        Category category = categoryRepository.findById(id).orElse(null);
-        if (category == null) {
-            return null;
-        }
+        Category category = categoryRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Category not found. id=" + id));
         category.update(request.name(), request.color(), request.imageUrl(), request.description());
-        return categoryRepository.save(category);
+        return category;
     }
 
     @Transactional

@@ -3,6 +3,7 @@ package gift.category;
 import gift.product.Product;
 import gift.product.ProductRepository;
 import gift.support.AbstractIntegrationTest;
+import gift.support.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,11 +31,10 @@ class CategoryServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void updateReturnsNullForUnknownId() {
-        Category updated = categoryService.update(999_999L,
-            new CategoryRequest("nope", "#000000", "https://example.com/x.jpg", null));
-
-        assertThat(updated).isNull();
+    void updateThrowsNotFoundForUnknownId() {
+        assertThatThrownBy(() -> categoryService.update(999_999L,
+            new CategoryRequest("nope", "#000000", "https://example.com/x.jpg", null)))
+            .isInstanceOf(NotFoundException.class);
     }
 
     @Test
