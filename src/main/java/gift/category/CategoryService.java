@@ -28,18 +28,23 @@ public class CategoryService {
 
     @Transactional
     public Category update(Long id, CategoryRequest request) {
-        Category category = categoryRepository.findById(id)
-            .orElseThrow(() -> new NotFoundException("Category not found. id=" + id));
+        Category category = findByIdOrThrow(id);
         category.update(request.name(), request.color(), request.imageUrl(), request.description());
         return category;
     }
 
     @Transactional
     public void delete(Long id) {
+        Category category = findByIdOrThrow(id);
         if (productRepository.existsByCategoryId(id)) {
             throw new CategoryInUseException(
                 "카테고리에 등록된 상품이 있어 삭제할 수 없습니다. id=" + id);
         }
-        categoryRepository.deleteById(id);
+        categoryRepository.delete(category);
+    }
+
+    private Category findByIdOrThrow(Long id) {
+        return categoryRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Category not found. id=" + id));
     }
 }

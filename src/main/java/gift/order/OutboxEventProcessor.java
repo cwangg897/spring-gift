@@ -28,8 +28,12 @@ public class OutboxEventProcessor {
 
     @Transactional
     public void processOne(Long eventId) {
-        OutboxEvent event = outboxEventRepository.findById(eventId).orElse(null);
-        if (event == null || event.getStatus() != OutboxEvent.OutboxStatus.PENDING) {
+        var eventOptional = outboxEventRepository.findById(eventId);
+        if (eventOptional.isEmpty()) {
+            return;
+        }
+        OutboxEvent event = eventOptional.get();
+        if (event.getStatus() != OutboxEvent.OutboxStatus.PENDING) {
             return;
         }
         try {

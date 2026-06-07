@@ -21,9 +21,7 @@ public class OptionService {
     }
 
     public List<Option> findByProductId(Long productId) {
-        if (!productRepository.existsById(productId)) {
-            return null;
-        }
+        findProductOrThrow(productId);
         return optionRepository.findByProductId(productId);
     }
 
@@ -34,10 +32,7 @@ public class OptionService {
 
     @Transactional
     public Option create(Long productId, OptionRequest request) {
-        Product product = productRepository.findById(productId).orElse(null);
-        if (product == null) {
-            return null;
-        }
+        Product product = findProductOrThrow(productId);
         if (optionRepository.existsByProductIdAndName(productId, request.name())) {
             throw new DuplicateException("이미 존재하는 옵션명입니다.");
         }
@@ -45,19 +40,22 @@ public class OptionService {
     }
 
     @Transactional
-    public boolean delete(Long productId, Long optionId) {
-        if (!productRepository.existsById(productId)) {
-            return false;
-        }
-        Option option = optionRepository.findById(optionId).orElse(null);
-        if (option == null || !option.getProduct().getId().equals(productId)) {
-            return false;
+    public void delete(Long productId, Long optionId) {
+        findProductOrThrow(productId);
+        Option option = optionRepository.findById(optionId)
+            .orElseThrow(() -> new NotFoundException("Option not found. id=" + optionId));
+        if (!option.getProduct().getId().equals(productId)) {
+            throw new NotFoundException("Option not found. id=" + optionId);
         }
         if (optionRepository.findByProductId(productId).size() <= 1) {
             throw new LastOptionDeletionException(
                 "옵션이 1개인 상품은 옵션을 삭제할 수 없습니다.");
         }
         optionRepository.delete(option);
-        return true;
+    }
+
+    private Product findProductOrThrow(Long productId) {
+        return productRepository.findById(productId)
+            .orElseThrow(() -> new NotFoundException("Product not found. id=" + productId));
     }
 }

@@ -2,6 +2,7 @@ package gift.member;
 
 import gift.support.AbstractIntegrationTest;
 import gift.support.exception.AuthenticationException;
+import gift.support.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -58,5 +59,19 @@ class MemberServiceTest extends AbstractIntegrationTest {
         assertThatThrownBy(() -> memberService.authenticate(new MemberRequest("nobody@example.com", "pw")))
             .isInstanceOf(AuthenticationException.class)
             .hasMessageContaining("Invalid email or password");
+    }
+
+    @Test
+    void findByIdThrowsNotFoundForUnknownId() {
+        assertThatThrownBy(() -> memberService.findById(999_999L))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Member not found. id=999999");
+    }
+
+    @Test
+    void deleteThrowsNotFoundForUnknownId() {
+        assertThatThrownBy(() -> memberService.delete(999_999L))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Member not found. id=999999");
     }
 }

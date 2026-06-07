@@ -33,6 +33,41 @@
 - **(ii) Outbox 테이블** — `outbox_events` 테이블 + 스케줄러 — durable, 정확히-한-번 보장
 - **(iii) 외부 큐 (Kafka/SQS)** — 학습 과제 범위 명백히 초과
 
+## Outbox 채택 근거 (PR #16, §2-ii 선택)
+
+세 옵션 중 **(ii) Outbox 테이블**을 택한 이유 — 코드 근거와 함께:
+
+### 1) 주문 ↔ 알림 원자성 (dual-write 문제 해소) — 핵심
+`OrderService.placeOrder`(`OrderService.java:44-63`)가 주문 저장과 알림 적재를 **하나의 `@Transactional`** 안에서 수행한다:
+- `orderRepository.save(...)` (주문)
+- `outboxEventRepository.save(new OutboxEvent(...))` (알림, `OrderService.java:89`)
+
+두 INSERT가 같은 DB 트랜잭션이므로 **"주문은 커밋됐는데 알림은 유실"** 혹은 그 반대가 원천 차단된다. 직전 방식인 인메모리 `@TransactionalEventListener(AFTER_COMMIT)`(폐기된 `KakaoNotificationListener`)는 커밋과 외부 전송 사이에 프로세스가 죽으면 알림이 사라지는 dual-write 취약점이 있었다.
+
+### 2) 내구성 / 재시작 생존
+알림 의도가 DB 행(`outbox_event`, status=`PENDING`)으로 영속화된다. 앱이 죽었다 살아나도 `OutboxPoller`(`@Scheduled(fixedDelay=5000)`, `OutboxPoller.java:21`)가 PENDING 행을 다시 집어간다. **(i) `@Retryable`**(인메모리)은 재시작 시 진행 중인 재시도가 통째로 손실 → 탈락.
+
+### 3) 재시도 + DLQ 격리를 DB만으로 구현
+`OutboxEventProcessor.processOne`(`OutboxEventProcessor.java:29-47`)이:
+- 성공 → `markSent()` (status=`SENT`)
+- 실패 → `markFailure()`로 `attempts++` + `last_error` 보존, `MAX_ATTEMPTS(5)` 도달 시 status=`DEAD`
+
+즉 `DEAD`가 **DLQ 역할**을 하고, `last_error`/`attempts` 컬럼이 실패 관찰성을 준다. 외부 메시지 브로커 없이 기존 DB만으로 at-least-once 전달 + 재시도 + DLQ를 확보 → **(iii) 외부 큐**의 인프라 비용 회피.
+
+### 4) 사용자 응답 시간에서 외부 호출 분리
+주문 트랜잭션에는 **outbox INSERT만** 포함되고, 실제 카카오 HTTP 호출은 폴러가 **별도 스레드 + 행별 별도 `@Transactional`**(`processOne`은 행 단위 메서드)로 수행한다. 카카오 API 지연/실패가 주문 응답을 막지 않는다 — ADR-006a에 남아 있던 "동기 호출 잔존" 문제를 함께 해소.
+
+### 5) 학습 과제 범위 적합
+DB·스케줄러만 추가하면 되고 별도 미들웨어(Kafka/SQS) 운영이 없다. 신뢰성 이득 대비 인프라 복잡도가 가장 낮은 지점.
+
+### 트레이드오프 (감수한 비용)
+| 항목 | 내용 |
+|---|---|
+| 폴링 지연 | `fixedDelay=5000` → 알림이 최대 ~5초 지연. 실시간성 요구 낮은 알림이라 수용. |
+| at-least-once → 중복 | 카카오 호출 성공 후 `markSent` 커밋 전 장애 시 재전송 가능. **현재 멱등키 없음** → 중복 메시지 가능성 잔존(후속 과제). |
+| 폴링 DB 부하 | `idx_outbox_status`로 PENDING 스캔 최적화. 5초마다 top-50 배치로 부하 제한. |
+| 단일 인스턴스 가정 | 다중 인스턴스 시 같은 행을 동시 집을 수 있음(`SELECT ... FOR UPDATE SKIP LOCKED` 미적용). 현 단계 단일 인스턴스라 미도입. |
+
 ## ETA / 활성화 조건 (V3-D)
 
 > **본 ADR 구현은 본 리팩토링 사이클 외**. 다음 중 하나가 충족될 때 활성화:

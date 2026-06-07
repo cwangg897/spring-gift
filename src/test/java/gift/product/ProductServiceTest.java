@@ -41,6 +41,20 @@ class ProductServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void findByIdThrowsNotFoundForUnknownId() {
+        assertThatThrownBy(() -> productService.findById(999_999L))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Product not found. id=999999");
+    }
+
+    @Test
+    void deleteThrowsNotFoundForUnknownId() {
+        assertThatThrownBy(() -> productService.delete(999_999L))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Product not found. id=999999");
+    }
+
+    @Test
     void createRejectsInvalidName() {
         Category category = categoryRepository.save(new Category("c-bad", "#000000", "https://example.com/i.jpg", null));
 

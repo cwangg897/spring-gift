@@ -29,9 +29,9 @@ public class WishService {
     public AddOutcome add(Member member, Long productId) {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new NotFoundException("Product not found. id=" + productId));
-        Wish existing = wishRepository.findByMember_IdAndProduct_Id(member.getId(), productId).orElse(null);
-        if (existing != null) {
-            return new AddOutcome(existing, false);
+        var existing = wishRepository.findByMember_IdAndProduct_Id(member.getId(), productId);
+        if (existing.isPresent()) {
+            return new AddOutcome(existing.get(), false);
         }
         Wish saved = wishRepository.save(new Wish(member, product));
         return new AddOutcome(saved, true);
@@ -49,11 +49,8 @@ public class WishService {
 
     @Transactional
     public void removeByMemberAndProduct(Member member, Long productId) {
-        Wish wish = wishRepository.findByMember_IdAndProduct_Id(member.getId(), productId).orElse(null);
-        if (wish == null) {
-            return;
-        }
-        wishRepository.delete(wish);
+        wishRepository.findByMember_IdAndProduct_Id(member.getId(), productId)
+            .ifPresent(wishRepository::delete);
     }
 
     public record AddOutcome(Wish wish, boolean newlyCreated) {

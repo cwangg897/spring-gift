@@ -30,7 +30,7 @@ public class ProductService {
     }
 
     public Product findById(Long id) {
-        return productRepository.findById(id).orElse(null);
+        return findByIdOrThrow(id);
     }
 
     @Transactional
@@ -51,7 +51,8 @@ public class ProductService {
 
     @Transactional
     public void delete(Long id) {
-        productRepository.deleteById(id);
+        Product product = findByIdOrThrow(id);
+        productRepository.delete(product);
     }
 
     @Transactional

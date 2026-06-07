@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -45,6 +46,32 @@ class OptionControllerValidationTest extends AbstractIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getOptionsWithUnknownProductReturns404ViaGlobalAdvice() throws Exception {
+        mockMvc.perform(get("/api/products/{productId}/options", 999_999L))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void createWithUnknownProductReturns404ViaGlobalAdvice() throws Exception {
+        String body = objectMapper.writeValueAsString(
+            new OptionRequest("missing-product-option", 5));
+
+        mockMvc.perform(post("/api/products/{productId}/options", 999_999L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteWithUnknownOptionReturns404ViaGlobalAdvice() throws Exception {
+        Product product = persistProductWithOption("opt-ctrl-missing", "p-ctrl-missing", "seed");
+
+        mockMvc.perform(delete("/api/products/{productId}/options/{optionId}",
+                product.getId(), 999_999L))
+            .andExpect(status().isNotFound());
     }
 
     @Test

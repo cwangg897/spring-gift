@@ -3,6 +3,7 @@ package gift.member;
 import gift.auth.JwtProvider;
 import gift.auth.TokenResponse;
 import gift.support.exception.AuthenticationException;
+import gift.support.exception.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +45,7 @@ public class MemberService {
 
     public Member findById(Long id) {
         return memberRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Member not found. id=" + id));
+            .orElseThrow(() -> new NotFoundException("Member not found. id=" + id));
     }
 
     public boolean existsByEmail(String email) {
@@ -87,6 +88,7 @@ public class MemberService {
 
     @Transactional
     public void delete(Long id) {
-        memberRepository.deleteById(id);
+        Member member = findById(id);
+        memberRepository.delete(member);
     }
 }

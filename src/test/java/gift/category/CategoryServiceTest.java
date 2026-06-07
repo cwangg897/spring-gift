@@ -38,6 +38,13 @@ class CategoryServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void deleteThrowsNotFoundForUnknownId() {
+        assertThatThrownBy(() -> categoryService.delete(999_999L))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Category not found. id=999999");
+    }
+
+    @Test
     void deleteRejectsCategoryReferencedByProduct() {
         Category category = categoryRepository.save(
             new Category("c-ref", "#abcdef", "https://example.com/c.jpg", null));

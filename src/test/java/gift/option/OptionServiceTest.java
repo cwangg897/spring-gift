@@ -6,6 +6,7 @@ import gift.product.Product;
 import gift.product.ProductRepository;
 import gift.support.AbstractIntegrationTest;
 import gift.support.exception.DuplicateException;
+import gift.support.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -38,10 +39,10 @@ class OptionServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void createReturnsNullForUnknownProduct() {
-        Option saved = optionService.create(999_999L, new OptionRequest("orphan", 1));
-
-        assertThat(saved).isNull();
+    void createThrowsNotFoundForUnknownProduct() {
+        assertThatThrownBy(() -> optionService.create(999_999L, new OptionRequest("orphan", 1)))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Product not found. id=999999");
     }
 
     @Test
@@ -51,6 +52,40 @@ class OptionServiceTest extends AbstractIntegrationTest {
         assertThatThrownBy(() -> optionService.create(product.getId(), new OptionRequest("dup-name", 1)))
             .isInstanceOf(DuplicateException.class)
             .hasMessageContaining("이미 존재");
+    }
+
+    @Test
+    void findByProductIdThrowsNotFoundForUnknownProduct() {
+        assertThatThrownBy(() -> optionService.findByProductId(999_999L))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Product not found. id=999999");
+    }
+
+    @Test
+    void deleteThrowsNotFoundForUnknownProduct() {
+        assertThatThrownBy(() -> optionService.delete(999_999L, 1L))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Product not found. id=999999");
+    }
+
+    @Test
+    void deleteThrowsNotFoundForUnknownOption() {
+        Product product = persistProductWithOption("opt-svc-missing", "p-missing", "seed");
+
+        assertThatThrownBy(() -> optionService.delete(product.getId(), 999_999L))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Option not found. id=999999");
+    }
+
+    @Test
+    void deleteThrowsNotFoundForOptionOfDifferentProduct() {
+        Product product = persistProductWithOption("opt-svc-owner", "p-owner", "owned");
+        Product otherProduct = persistProductWithOption("opt-svc-other", "p-other", "other");
+        Long otherOptionId = optionRepository.findByProductId(otherProduct.getId()).get(0).getId();
+
+        assertThatThrownBy(() -> optionService.delete(product.getId(), otherOptionId))
+            .isInstanceOf(NotFoundException.class)
+            .hasMessageContaining("Option not found. id=" + otherOptionId);
     }
 
     @Test
